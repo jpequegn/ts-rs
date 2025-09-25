@@ -2,6 +2,9 @@ use clap::{Parser, Subcommand};
 use anyhow::Result;
 use colored::Colorize;
 
+// Use our own library
+use chronos::{TimeSeries, Frequency, MissingValuePolicy, AnalysisResult};
+
 /// Chronos - A powerful CLI tool for time series analysis
 #[derive(Parser)]
 #[clap(name = "chronos")]
