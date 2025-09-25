@@ -1,0 +1,44 @@
+# Rust build artifacts
+/target
+
+# Rust compilation outputs
+Cargo.lock
+
+# Generated executables
+*.exe
+*.out
+
+# IDE and editor files
+*.swp
+*.swo
+*.tmp
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+thumbs.db
+
+# Project specific files
+# Generated charts and visualizations
+*.png
+*.svg
+*.jpg
+*.jpeg
+
+# Generated CSV files (excluding sample data)
+/data/*.csv
+generated_data.csv
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.backup

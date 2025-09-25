@@ -1,0 +1,33 @@
+[package]
+name = "chronos"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# CLI argument parsing
+clap = { version = "3.2", features = ["derive"] }
+
+# Serialization and data handling
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+csv = "1.1"
+
+# Date and time handling
+chrono = { version = "0.4.26", features = ["serde"] }
+
+# Error handling
+anyhow = "1.0"
+
+# Statistical functions
+statrs = "0.15"
+
+# Precise decimal calculations
+rust_decimal = "1.26"
+
+# Terminal output
+colored = "2.0"
+
+# Numerical arrays
+ndarray = "0.15"
