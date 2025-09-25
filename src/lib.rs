@@ -7,11 +7,15 @@ pub mod types;
 pub mod timeseries;
 pub mod analysis;
 pub mod validation;
+pub mod import;
+pub mod preprocessing;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
 pub use timeseries::TimeSeries;
 pub use analysis::{AnalysisResult, TrendAnalysis, SeasonalAnalysis, AnomalyDetection};
+pub use import::{ImportConfig, ImportResult, ImportStats, import_from_file, import_csv, import_json};
+pub use preprocessing::{PreprocessingConfig, PreprocessingResult, preprocess_timeseries};
 
 /// Result type used throughout the library
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
