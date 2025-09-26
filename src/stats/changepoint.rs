@@ -29,7 +29,7 @@ pub struct ChangePoint {
 }
 
 /// Type of structural change detected
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ChangeType {
     /// Change in mean level
     MeanShift,

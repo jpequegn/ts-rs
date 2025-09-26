@@ -10,7 +10,11 @@ use chronos::{
     ImportConfig, import_csv,
     import::{TimestampColumn},
     validation::validate_data_quality,
-    stats::{analyze_timeseries, ExportFormat, export_stats_results}
+    stats::{analyze_timeseries, ExportFormat, export_stats_results},
+    trend::{
+        analyze_comprehensive, TrendAnalysisConfig, DecompositionMethod,
+        perform_decomposition, detect_trend, perform_detrending, DetrendingMethod
+    }
 };
 
 /// Chronos - A powerful CLI tool for time series analysis
@@ -95,6 +99,69 @@ enum Commands {
         /// Detect change points
         #[clap(long)]
         detect_changepoints: bool,
+    },
+
+    /// Comprehensive trend analysis and decomposition for time series data
+    Trend {
+        /// Path to the CSV file containing time series data
+        #[clap(short, long)]
+        file: String,
+
+        /// Column name to analyze
+        #[clap(short, long, default_value = "value")]
+        column: String,
+
+        /// Timestamp column name
+        #[clap(short, long, default_value = "timestamp")]
+        time_column: String,
+
+        /// Analysis method: analyze, decompose, detect, detrend
+        #[clap(short, long, default_value = "analyze")]
+        method: String,
+
+        /// Decomposition method: classical, stl
+        #[clap(long, default_value = "classical")]
+        decomposition: String,
+
+        /// Detrending method: linear, difference, moving_average, hp_filter
+        #[clap(long, default_value = "linear")]
+        detrending: String,
+
+        /// Seasonal period (auto-detect if not specified)
+        #[clap(long)]
+        seasonal_period: Option<usize>,
+
+        /// Trend detection test: mann_kendall, sens_slope, pettitt
+        #[clap(long, default_value = "mann_kendall")]
+        test: String,
+
+        /// Significance level for statistical tests
+        #[clap(long, default_value = "0.05")]
+        alpha: f64,
+
+        /// HP filter lambda parameter
+        #[clap(long, default_value = "1600.0")]
+        lambda: f64,
+
+        /// Moving average window size
+        #[clap(long, default_value = "12")]
+        window: usize,
+
+        /// Difference order for differencing detrending
+        #[clap(long, default_value = "1")]
+        diff_order: usize,
+
+        /// Export results to file (optional)
+        #[clap(short, long)]
+        output: Option<String>,
+
+        /// Export format: json, text, markdown
+        #[clap(long, default_value = "text")]
+        format: String,
+
+        /// Generate plot data for visualization
+        #[clap(long)]
+        plot: bool,
     },
 }
 
@@ -213,6 +280,304 @@ fn main() -> Result<()> {
                 Err(e) => {
                     println!("{}", format!("❌ Error generating data: {}", e).red());
                     return Err(e.into());
+                }
+            }
+        }
+
+        Commands::Trend {
+            file,
+            column,
+            time_column,
+            method,
+            decomposition,
+            detrending,
+            seasonal_period,
+            test,
+            alpha,
+            lambda,
+            window,
+            diff_order,
+            output,
+            format,
+            plot,
+        } => {
+            println!("{}", "📈 Performing trend analysis...".cyan().bold());
+            println!("File: {}", file);
+            println!("Column: {}", column);
+            println!("Method: {}", method);
+
+            // Configure import to target specific column
+            let mut config = ImportConfig::default();
+            config.csv_config.timestamp_column = TimestampColumn::Name(time_column.clone());
+            config.csv_config.value_columns = vec![column.clone()];
+
+            // Import the CSV data
+            match import_csv(file, config) {
+                Ok(result) => {
+                    println!("{}", "✅ Data imported successfully!".green());
+
+                    let ts = &result.timeseries;
+                    println!("  Imported {} data points", ts.values.len());
+
+                    if ts.values.is_empty() {
+                        println!("{}", "❌ No valid data found for analysis".red());
+                        return Ok(());
+                    }
+
+                    match method.as_str() {
+                        "analyze" => {
+                            // Comprehensive trend analysis
+                            let mut trend_config = TrendAnalysisConfig::default();
+                            trend_config.alpha = *alpha;
+                            trend_config.seasonal_period = *seasonal_period;
+                            trend_config.generate_plot_data = *plot;
+
+                            match analyze_comprehensive(&ts.timestamps, &ts.values, Some(trend_config)) {
+                                Ok(analysis) => {
+                                    println!("{}", "✅ Trend analysis completed!".green());
+
+                                    let summary = analysis.summary_report();
+                                    println!("\n{}", summary);
+
+                                    // Export results if requested
+                                    if let Some(output_file) = output {
+                                        let export_content = match format.as_str() {
+                                            "json" => serde_json::to_string_pretty(&analysis)?,
+                                            "markdown" | "md" => format!("# Trend Analysis Report\n\n```\n{}\n```", summary),
+                                            _ => summary,
+                                        };
+
+                                        std::fs::write(output_file, export_content)?;
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Trend analysis failed: {}", e).red());
+                                    return Err(anyhow::anyhow!("Trend analysis error: {}", e));
+                                }
+                            }
+                        },
+
+                        "decompose" => {
+                            // Time series decomposition
+                            let decomp_method = match decomposition.as_str() {
+                                "stl" => DecompositionMethod::Stl,
+                                "multiplicative" => DecompositionMethod::ClassicalMultiplicative,
+                                _ => DecompositionMethod::ClassicalAdditive,
+                            };
+
+                            match perform_decomposition(&ts.values, decomp_method, *seasonal_period) {
+                                Ok(decomp_result) => {
+                                    println!("{}", "✅ Decomposition completed!".green());
+
+                                    println!("\n📊 Decomposition Results:");
+                                    println!("  Method: {:?}", decomp_result.method);
+                                    let mode = match decomp_result.method {
+                                        DecompositionMethod::ClassicalAdditive | DecompositionMethod::Stl => "Additive",
+                                        DecompositionMethod::ClassicalMultiplicative => "Multiplicative",
+                                        _ => "Unknown",
+                                    };
+                                    println!("  Mode: {}", mode);
+                                    if !decomp_result.seasonal_periods.is_empty() {
+                                        println!("  Seasonal Periods: {:?}", decomp_result.seasonal_periods.iter().map(|p| p.period).collect::<Vec<_>>());
+                                    }
+
+                                    println!("\n📈 Quality Metrics:");
+                                    println!("  Trend Strength: {:.3}", decomp_result.quality_metrics.trend_strength);
+                                    println!("  Seasonal Strength: {:.3}", decomp_result.quality_metrics.seasonality_strength);
+                                    println!("  R-squared: {:.3}", decomp_result.quality_metrics.r_squared);
+                                    println!("  Residual Std: {:.6}", decomp_result.quality_metrics.std_residuals);
+
+                                    // Export results if requested
+                                    if let Some(output_file) = output {
+                                        let export_content = match format.as_str() {
+                                            "json" => serde_json::to_string_pretty(&decomp_result)?,
+                                            "markdown" | "md" => {
+                                                format!("# Decomposition Analysis Report\n\n## Method\n{:?}\n\n## Quality Metrics\n- Trend Strength: {:.3}\n- Seasonal Strength: {:.3}\n- R-squared: {:.3}",
+                                                    decomp_result.method,
+                                                    decomp_result.quality_metrics.trend_strength,
+                                                    decomp_result.quality_metrics.seasonality_strength,
+                                                    decomp_result.quality_metrics.r_squared)
+                                            },
+                                            _ => format!("Decomposition Method: {:?}\nTrend Strength: {:.3}\nSeasonal Strength: {:.3}\nR-squared: {:.3}",
+                                                decomp_result.method,
+                                                decomp_result.quality_metrics.trend_strength,
+                                                decomp_result.quality_metrics.seasonality_strength,
+                                                decomp_result.quality_metrics.r_squared),
+                                        };
+
+                                        std::fs::write(output_file, export_content)?;
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Decomposition failed: {}", e).red());
+                                    return Err(anyhow::anyhow!("Decomposition error: {}", e));
+                                }
+                            }
+                        },
+
+                        "detect" => {
+                            // Trend detection
+                            match detect_trend(&ts.values, test) {
+                                Ok(test_result) => {
+                                    println!("{}", "✅ Trend detection completed!".green());
+
+                                    println!("\n🔍 Trend Detection Results:");
+                                    println!("  Test: {}", test_result.test_name);
+                                    println!("  Statistic: {:.6}", test_result.statistic);
+                                    println!("  P-value: {:.6}", test_result.p_value);
+                                    println!("  Significant: {}", if test_result.is_significant { "✅ Yes" } else { "❌ No" });
+                                    println!("  Trend Direction: {}", match test_result.trend_direction {
+                                        1 => "📈 Increasing",
+                                        -1 => "📉 Decreasing",
+                                        _ => "➡️  No trend",
+                                    });
+
+                                    if let Some(slope) = test_result.slope {
+                                        println!("  Slope: {:.6}", slope);
+                                    }
+
+                                    // Export results if requested
+                                    if let Some(output_file) = output {
+                                        let export_content = match format.as_str() {
+                                            "json" => serde_json::to_string_pretty(&test_result)?,
+                                            "markdown" | "md" => {
+                                                format!("# Trend Detection Report\n\n## Test: {}\n\n- Statistic: {:.6}\n- P-value: {:.6}\n- Significant: {}\n- Direction: {}",
+                                                    test_result.test_name,
+                                                    test_result.statistic,
+                                                    test_result.p_value,
+                                                    if test_result.is_significant { "Yes" } else { "No" },
+                                                    match test_result.trend_direction {
+                                                        1 => "Increasing",
+                                                        -1 => "Decreasing",
+                                                        _ => "No trend",
+                                                    })
+                                            },
+                                            _ => format!("Test: {}\nStatistic: {:.6}\nP-value: {:.6}\nSignificant: {}\nDirection: {}",
+                                                test_result.test_name,
+                                                test_result.statistic,
+                                                test_result.p_value,
+                                                if test_result.is_significant { "Yes" } else { "No" },
+                                                match test_result.trend_direction {
+                                                    1 => "Increasing",
+                                                    -1 => "Decreasing",
+                                                    _ => "No trend",
+                                                }),
+                                        };
+
+                                        std::fs::write(output_file, export_content)?;
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Trend detection failed: {}", e).red());
+                                    return Err(anyhow::anyhow!("Trend detection error: {}", e));
+                                }
+                            }
+                        },
+
+                        "detrend" => {
+                            // Detrending
+                            let detrend_method = match detrending.as_str() {
+                                "difference" => DetrendingMethod::FirstDifference,
+                                "moving_average" => DetrendingMethod::MovingAverage(*window),
+                                "hp_filter" => DetrendingMethod::HPFilter(*lambda),
+                                _ => DetrendingMethod::Linear,
+                            };
+
+                            if detrending == "difference" && *diff_order > 1 {
+                                let detrend_method = DetrendingMethod::Difference(*diff_order);
+                                match perform_detrending(&ts.values, detrend_method) {
+                                    Ok(detrend_result) => {
+                                        println!("{}", "✅ Detrending completed!".green());
+
+                                        println!("\n📉 Detrending Results:");
+                                        println!("  Method: {:?}", detrend_result.method);
+                                        println!("  Original Points: {}", detrend_result.original.len());
+                                        println!("  Detrended Points: {}", detrend_result.detrended.len());
+                                        println!("  Variance Reduction: {:.1}%", detrend_result.quality_metrics.variance_reduction * 100.0);
+                                        println!("  Residual Std: {:.6}", detrend_result.quality_metrics.residual_std);
+
+                                        // Export results if requested
+                                        if let Some(output_file) = output {
+                                            let export_content = match format.as_str() {
+                                                "json" => serde_json::to_string_pretty(&detrend_result)?,
+                                                "markdown" | "md" => {
+                                                    format!("# Detrending Report\n\n## Method\n{:?}\n\n## Quality Metrics\n- Variance Reduction: {:.1}%\n- Residual Std: {:.6}",
+                                                        detrend_result.method,
+                                                        detrend_result.quality_metrics.variance_reduction * 100.0,
+                                                        detrend_result.quality_metrics.residual_std)
+                                                },
+                                                _ => format!("Method: {:?}\nVariance Reduction: {:.1}%\nResidual Std: {:.6}",
+                                                    detrend_result.method,
+                                                    detrend_result.quality_metrics.variance_reduction * 100.0,
+                                                    detrend_result.quality_metrics.residual_std),
+                                            };
+
+                                            std::fs::write(output_file, export_content)?;
+                                            println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("{}", format!("❌ Detrending failed: {}", e).red());
+                                        return Err(anyhow::anyhow!("Detrending error: {}", e));
+                                    }
+                                }
+                            } else {
+                                match perform_detrending(&ts.values, detrend_method) {
+                                    Ok(detrend_result) => {
+                                        println!("{}", "✅ Detrending completed!".green());
+
+                                        println!("\n📉 Detrending Results:");
+                                        println!("  Method: {:?}", detrend_result.method);
+                                        println!("  Original Points: {}", detrend_result.original.len());
+                                        println!("  Detrended Points: {}", detrend_result.detrended.len());
+                                        println!("  Variance Reduction: {:.1}%", detrend_result.quality_metrics.variance_reduction * 100.0);
+                                        println!("  Residual Std: {:.6}", detrend_result.quality_metrics.residual_std);
+
+                                        if let Some(r2) = detrend_result.quality_metrics.r_squared {
+                                            println!("  R-squared: {:.3}", r2);
+                                        }
+
+                                        // Export results if requested
+                                        if let Some(output_file) = output {
+                                            let export_content = match format.as_str() {
+                                                "json" => serde_json::to_string_pretty(&detrend_result)?,
+                                                "markdown" | "md" => {
+                                                    format!("# Detrending Report\n\n## Method\n{:?}\n\n## Quality Metrics\n- Variance Reduction: {:.1}%\n- Residual Std: {:.6}",
+                                                        detrend_result.method,
+                                                        detrend_result.quality_metrics.variance_reduction * 100.0,
+                                                        detrend_result.quality_metrics.residual_std)
+                                                },
+                                                _ => format!("Method: {:?}\nVariance Reduction: {:.1}%\nResidual Std: {:.6}",
+                                                    detrend_result.method,
+                                                    detrend_result.quality_metrics.variance_reduction * 100.0,
+                                                    detrend_result.quality_metrics.residual_std),
+                                            };
+
+                                            std::fs::write(output_file, export_content)?;
+                                            println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("{}", format!("❌ Detrending failed: {}", e).red());
+                                        return Err(anyhow::anyhow!("Detrending error: {}", e));
+                                    }
+                                }
+                            }
+                        },
+
+                        _ => {
+                            println!("{}", format!("❌ Unknown method: {}", method).red());
+                            println!("Available methods: analyze, decompose, detect, detrend");
+                            return Err(anyhow::anyhow!("Invalid method"));
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{}", format!("❌ Error importing data: {}", e).red());
+                    return Err(anyhow::anyhow!("Import error: {}", e));
                 }
             }
         }

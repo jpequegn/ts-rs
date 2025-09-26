@@ -10,6 +10,7 @@ pub mod validation;
 pub mod import;
 pub mod preprocessing;
 pub mod stats;
+pub mod trend;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -25,6 +26,29 @@ pub use stats::{
     StationarityTest, test_stationarity,
     ChangePoint, detect_changepoints,
     ExportFormat, export_stats_results, analyze_timeseries
+};
+pub use trend::{
+    // Main analysis functions
+    analyze_comprehensive,
+
+    // Decomposition
+    DecompositionMethod, DecompositionResult, perform_decomposition,
+
+    // Detection
+    TrendTest, TrendTestResult, detect_trend, test_trend_significance,
+
+    // Detrending
+    DetrendingMethod, DetrendingResult, perform_detrending,
+    linear_detrend, difference_detrend, moving_average_detrend, hp_filter_detrend,
+
+    // Analysis and classification
+    TrendAnalysisConfig, analyze_trend_comprehensive, classify_trend_direction, compute_trend_strength,
+
+    // Visualization
+    TrendPlotData, DecompositionPlotData, generate_trend_plot_data, generate_decomposition_plot_data,
+
+    // Main result types
+    ComprehensiveTrendAnalysis, TrendSummary
 };
 
 /// Result type used throughout the library
