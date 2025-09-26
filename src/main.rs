@@ -19,6 +19,11 @@ use chronos::{
         detect_seasonality, SeasonalityMethod, analyze_seasonal_patterns,
         perform_seasonal_adjustment, SeasonalAdjustmentMethod,
         SeasonalityAnalysisConfig, SeasonalPeriod, SeasonalPeriodType
+    },
+    anomaly::{
+        detect_anomalies, AnomalyDetectionConfig,
+        AnomalyMethod, ThresholdConfig, ContextualConfig, ScoringConfig,
+        StreamingConfig, ScoringMethod
     }
 };
 
@@ -238,6 +243,101 @@ enum Commands {
         /// Detect seasonal breaks
         #[clap(long)]
         breaks: bool,
+    },
+
+    /// Comprehensive anomaly detection for time series data
+    Anomaly {
+        /// Path to the CSV file containing time series data
+        #[clap(short, long)]
+        file: String,
+
+        /// Column name to analyze
+        #[clap(short, long, default_value = "value")]
+        column: String,
+
+        /// Timestamp column name
+        #[clap(short, long, default_value = "timestamp")]
+        time_column: String,
+
+        /// Detection methods (comma-separated): zscore, modified_zscore, iqr, grubbs, isolation_forest, lof, dbscan, seasonal, trend, volatility, contextual, all
+        #[clap(short, long, default_value = "zscore,iqr")]
+        methods: String,
+
+        /// Threshold for statistical methods
+        #[clap(long, default_value = "3.0")]
+        threshold: f64,
+
+        /// IQR factor for outlier detection
+        #[clap(long, default_value = "1.5")]
+        iqr_factor: f64,
+
+        /// Grubbs test alpha level
+        #[clap(long, default_value = "0.05")]
+        grubbs_alpha: f64,
+
+        /// Isolation Forest contamination factor
+        #[clap(long, default_value = "0.1")]
+        contamination: f64,
+
+        /// Number of trees for Isolation Forest
+        #[clap(long, default_value = "100")]
+        n_trees: usize,
+
+        /// Number of neighbors for LOF
+        #[clap(long, default_value = "20")]
+        n_neighbors: usize,
+
+        /// DBSCAN epsilon parameter
+        #[clap(long, default_value = "0.5")]
+        eps: f64,
+
+        /// DBSCAN minimum samples
+        #[clap(long, default_value = "5")]
+        min_samples: usize,
+
+        /// Seasonal period for contextual detection
+        #[clap(long)]
+        seasonal_period: Option<usize>,
+
+        /// Enable contextual day-of-week adjustment
+        #[clap(long)]
+        contextual: bool,
+
+        /// Baseline periods for contextual methods
+        #[clap(long, default_value = "100")]
+        baseline_periods: usize,
+
+        /// Window size for trend and volatility detection
+        #[clap(long, default_value = "10")]
+        window_size: usize,
+
+        /// Scoring method: maximum, weighted, ensemble
+        #[clap(long, default_value = "maximum")]
+        scoring: String,
+
+        /// Minimum severity to report: low, medium, high, critical
+        #[clap(long, default_value = "medium")]
+        min_severity: String,
+
+        /// Maximum number of top anomalies to report
+        #[clap(long, default_value = "10")]
+        max_anomalies: usize,
+
+        /// Export results to file (optional)
+        #[clap(short, long)]
+        output: Option<String>,
+
+        /// Export format: json, csv, text, markdown
+        #[clap(long, default_value = "text")]
+        format: String,
+
+        /// Export anomaly scores for all points
+        #[clap(long)]
+        export_scores: bool,
+
+        /// Show detailed analysis for each method
+        #[clap(long)]
+        detailed: bool,
     },
 }
 
@@ -1108,6 +1208,314 @@ fn main() -> Result<()> {
                             println!("{}", format!("❌ Unknown method: {}", method).red());
                             println!("Available methods: detect, strength, adjust");
                             return Err(anyhow::anyhow!("Invalid method"));
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{}", format!("❌ Error importing data: {}", e).red());
+                    return Err(anyhow::anyhow!("Import error: {}", e));
+                }
+            }
+        }
+
+        Commands::Anomaly {
+            file,
+            column,
+            time_column,
+            methods,
+            threshold,
+            iqr_factor,
+            grubbs_alpha,
+            contamination,
+            n_trees,
+            n_neighbors,
+            eps,
+            min_samples,
+            seasonal_period,
+            contextual,
+            baseline_periods,
+            window_size,
+            scoring,
+            min_severity,
+            max_anomalies,
+            output,
+            format,
+            export_scores,
+            detailed,
+        } => {
+            println!("{}", "🔍 Performing anomaly detection...".cyan().bold());
+            println!("File: {}", file);
+            println!("Column: {}", column);
+            println!("Methods: {}", methods);
+
+            // Configure import to target specific column
+            let mut config = ImportConfig::default();
+            config.csv_config.timestamp_column = TimestampColumn::Name(time_column.clone());
+            config.csv_config.value_columns = vec![column.clone()];
+
+            // Import the CSV data
+            match import_csv(file, config) {
+                Ok(result) => {
+                    println!("{}", "✅ Data imported successfully!".green());
+
+                    let ts = &result.timeseries;
+                    println!("  Imported {} data points", ts.values.len());
+
+                    if ts.values.is_empty() {
+                        println!("{}", "❌ No valid data found for analysis".red());
+                        return Ok(());
+                    }
+
+                    // Parse detection methods
+                    let method_names: Vec<&str> = methods.split(',').map(|s| s.trim()).collect();
+                    let mut detection_methods = Vec::new();
+
+                    for method_name in method_names {
+                        match method_name {
+                            "zscore" => detection_methods.push(AnomalyMethod::ZScore { threshold: *threshold }),
+                            "modified_zscore" => detection_methods.push(AnomalyMethod::ModifiedZScore { threshold: *threshold }),
+                            "iqr" => detection_methods.push(AnomalyMethod::IQR { factor: *iqr_factor }),
+                            "grubbs" => detection_methods.push(AnomalyMethod::Grubbs { alpha: *grubbs_alpha }),
+                            "isolation_forest" => detection_methods.push(AnomalyMethod::IsolationForest {
+                                contamination: *contamination,
+                                n_trees: *n_trees
+                            }),
+                            "lof" => detection_methods.push(AnomalyMethod::LocalOutlierFactor {
+                                n_neighbors: *n_neighbors,
+                                contamination: *contamination
+                            }),
+                            "dbscan" => detection_methods.push(AnomalyMethod::DBSCANClustering {
+                                eps: *eps,
+                                min_samples: *min_samples
+                            }),
+                            "seasonal" => {
+                                if let Some(period) = seasonal_period {
+                                    detection_methods.push(AnomalyMethod::SeasonalDecomposition { period: *period });
+                                } else {
+                                    println!("{}", "⚠️  Seasonal method requires --seasonal-period parameter".yellow());
+                                }
+                            },
+                            "trend" => detection_methods.push(AnomalyMethod::TrendDeviation { window_size: *window_size }),
+                            "level_shift" => detection_methods.push(AnomalyMethod::LevelShift { threshold: *threshold }),
+                            "volatility" => detection_methods.push(AnomalyMethod::VolatilityAnomaly { window_size: *window_size }),
+                            "contextual" => {
+                                if *contextual {
+                                    detection_methods.push(AnomalyMethod::DayOfWeekAdjusted { baseline_periods: *baseline_periods });
+                                    if let Some(period) = seasonal_period {
+                                        detection_methods.push(AnomalyMethod::SeasonalContext { seasonal_periods: vec![*period] });
+                                    }
+                                }
+                            },
+                            "all" => {
+                                detection_methods.extend(vec![
+                                    AnomalyMethod::ZScore { threshold: *threshold },
+                                    AnomalyMethod::ModifiedZScore { threshold: *threshold },
+                                    AnomalyMethod::IQR { factor: *iqr_factor },
+                                    AnomalyMethod::Grubbs { alpha: *grubbs_alpha },
+                                    AnomalyMethod::IsolationForest { contamination: *contamination, n_trees: *n_trees },
+                                    AnomalyMethod::LocalOutlierFactor { n_neighbors: *n_neighbors, contamination: *contamination },
+                                    AnomalyMethod::TrendDeviation { window_size: *window_size },
+                                    AnomalyMethod::VolatilityAnomaly { window_size: *window_size },
+                                ]);
+                                if *contextual {
+                                    detection_methods.push(AnomalyMethod::DayOfWeekAdjusted { baseline_periods: *baseline_periods });
+                                }
+                            },
+                            _ => {
+                                println!("{}", format!("⚠️  Unknown method: {}", method_name).yellow());
+                            }
+                        }
+                    }
+
+                    if detection_methods.is_empty() {
+                        println!("{}", "❌ No valid detection methods specified".red());
+                        return Err(anyhow::anyhow!("No valid detection methods"));
+                    }
+
+                    // Configure anomaly detection
+                    let scoring_method = match scoring.as_str() {
+                        "weighted" => ScoringMethod::WeightedAverage,
+                        "ensemble" => ScoringMethod::EnsembleVoting,
+                        _ => ScoringMethod::Maximum,
+                    };
+
+                    let mut anomaly_config = AnomalyDetectionConfig {
+                        methods: detection_methods,
+                        thresholds: ThresholdConfig::default(),
+                        contextual: ContextualConfig {
+                            day_of_week_adjustment: *contextual,
+                            seasonal_context: seasonal_period.is_some(),
+                            seasonal_periods: seasonal_period.map(|p| vec![p]).unwrap_or_default(),
+                            baseline_periods: *baseline_periods,
+                        },
+                        scoring: ScoringConfig {
+                            method: scoring_method,
+                            method_weights: std::collections::HashMap::new(),
+                            enable_ranking: true,
+                            max_top_anomalies: *max_anomalies,
+                        },
+                        streaming: StreamingConfig::default(),
+                    };
+
+                    // Perform anomaly detection
+                    match detect_anomalies(&ts, &anomaly_config) {
+                        Ok(mut detection_result) => {
+                            println!("{}", "✅ Anomaly detection completed!".green());
+
+                            // Filter by minimum severity
+                            let min_sev = match min_severity.as_str() {
+                                "low" => chronos::analysis::AnomalySeverity::Low,
+                                "medium" => chronos::analysis::AnomalySeverity::Medium,
+                                "high" => chronos::analysis::AnomalySeverity::High,
+                                "critical" => chronos::analysis::AnomalySeverity::Critical,
+                                _ => chronos::analysis::AnomalySeverity::Medium,
+                            };
+
+                            detection_result.anomalies.retain(|a| {
+                                match (&a.severity, &min_sev) {
+                                    (chronos::analysis::AnomalySeverity::Critical, _) => true,
+                                    (chronos::analysis::AnomalySeverity::High, chronos::analysis::AnomalySeverity::Critical) => false,
+                                    (chronos::analysis::AnomalySeverity::High, _) => true,
+                                    (chronos::analysis::AnomalySeverity::Medium, chronos::analysis::AnomalySeverity::Critical | chronos::analysis::AnomalySeverity::High) => false,
+                                    (chronos::analysis::AnomalySeverity::Medium, _) => true,
+                                    (chronos::analysis::AnomalySeverity::Low, chronos::analysis::AnomalySeverity::Low) => true,
+                                    (chronos::analysis::AnomalySeverity::Low, _) => false,
+                                }
+                            });
+
+                            // Limit to max anomalies
+                            detection_result.anomalies.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+                            detection_result.anomalies.truncate(*max_anomalies);
+
+                            println!("\n🚨 Anomaly Detection Results:");
+                            println!("  Total anomalies found: {}", detection_result.anomalies.len());
+                            println!("  Anomaly rate: {:.2}%", detection_result.statistics.anomaly_rate * 100.0);
+
+                            if !detection_result.anomalies.is_empty() {
+                                println!("\n📊 Top Anomalies:");
+                                for (i, anomaly) in detection_result.anomalies.iter().enumerate().take(5) {
+                                    let severity_icon = match anomaly.severity {
+                                        chronos::analysis::AnomalySeverity::Critical => "🔴",
+                                        chronos::analysis::AnomalySeverity::High => "🟠",
+                                        chronos::analysis::AnomalySeverity::Medium => "🟡",
+                                        chronos::analysis::AnomalySeverity::Low => "🟢",
+                                    };
+                                    println!("  {}. {} Index: {}, Time: {}, Value: {:.4}, Score: {:.3}",
+                                        i + 1,
+                                        severity_icon,
+                                        anomaly.index,
+                                        anomaly.timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                        anomaly.value,
+                                        anomaly.score
+                                    );
+                                }
+
+                                if detection_result.anomalies.len() > 5 {
+                                    println!("  ... and {} more", detection_result.anomalies.len() - 5);
+                                }
+                            } else {
+                                println!("  No anomalies found above the specified severity threshold.");
+                            }
+
+                            // Export results if requested
+                            if let Some(output_file) = output {
+                                let export_content = match format.as_str() {
+                                    "json" => serde_json::to_string_pretty(&detection_result)?,
+                                    "csv" => {
+                                        let mut csv_content = "index,timestamp,value,score,severity,expected_value\n".to_string();
+                                        for anomaly in &detection_result.anomalies {
+                                            csv_content.push_str(&format!("{},{},{:.6},{:.6},{:?},{}\n",
+                                                anomaly.index,
+                                                anomaly.timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                                anomaly.value,
+                                                anomaly.score,
+                                                anomaly.severity,
+                                                anomaly.expected_value.map(|v| format!("{:.6}", v)).unwrap_or("".to_string())
+                                            ));
+                                        }
+                                        csv_content
+                                    },
+                                    "markdown" | "md" => {
+                                        let mut md = "# Anomaly Detection Report\n\n".to_string();
+                                        md.push_str(&format!("## Summary\n"));
+                                        md.push_str(&format!("- Total anomalies: {}\n", detection_result.anomalies.len()));
+                                        md.push_str(&format!("- Anomaly rate: {:.2}%\n", detection_result.statistics.anomaly_rate * 100.0));
+                                        md.push_str(&format!("- Methods used: {}\n\n", methods));
+
+                                        md.push_str("## Detected Anomalies\n\n");
+                                        md.push_str("| Index | Timestamp | Value | Score | Severity |\n");
+                                        md.push_str("|-------|-----------|-------|-------|----------|\n");
+                                        for anomaly in &detection_result.anomalies {
+                                            md.push_str(&format!("| {} | {} | {:.4} | {:.3} | {:?} |\n",
+                                                anomaly.index,
+                                                anomaly.timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                                anomaly.value,
+                                                anomaly.score,
+                                                anomaly.severity
+                                            ));
+                                        }
+                                        md
+                                    },
+                                    _ => {
+                                        let mut text = "Anomaly Detection Results\n".to_string();
+                                        text.push_str("========================\n\n");
+                                        text.push_str(&format!("Total anomalies: {}\n", detection_result.anomalies.len()));
+                                        text.push_str(&format!("Anomaly rate: {:.2}%\n", detection_result.statistics.anomaly_rate * 100.0));
+                                        text.push_str(&format!("Methods used: {}\n\n", methods));
+
+                                        text.push_str("Detected Anomalies:\n");
+                                        for (i, anomaly) in detection_result.anomalies.iter().enumerate() {
+                                            text.push_str(&format!("{}. Index: {}, Time: {}, Value: {:.4}, Score: {:.3}, Severity: {:?}\n",
+                                                i + 1,
+                                                anomaly.index,
+                                                anomaly.timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                                anomaly.value,
+                                                anomaly.score,
+                                                anomaly.severity
+                                            ));
+                                        }
+                                        text
+                                    },
+                                };
+
+                                std::fs::write(output_file, export_content)?;
+                                println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                            }
+
+                            // Export anomaly scores if requested
+                            if *export_scores {
+                                let scores_file = output.as_ref()
+                                    .map(|f| f.replace(".csv", "_scores.csv"))
+                                    .unwrap_or_else(|| "anomaly_scores.csv".to_string());
+
+                                let mut file = File::create(&scores_file)?;
+                                writeln!(file, "index,timestamp,value,anomaly_score")?;
+
+                                // Create a simple anomaly score for all points (0 for normal, actual score for anomalies)
+                                let mut all_scores = vec![0.0; ts.values.len()];
+                                for anomaly in &detection_result.anomalies {
+                                    if anomaly.index < all_scores.len() {
+                                        all_scores[anomaly.index] = anomaly.score;
+                                    }
+                                }
+
+                                for (i, (timestamp, (value, score))) in ts.timestamps.iter()
+                                    .zip(ts.values.iter().zip(all_scores.iter())).enumerate() {
+                                    writeln!(file, "{},{},{:.6},{:.6}",
+                                        i,
+                                        timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                        value,
+                                        score)?;
+                                }
+
+                                println!("{}", format!("💾 Anomaly scores exported to: {}", scores_file).green());
+                            }
+
+                            println!("{}", "\n✅ Anomaly detection complete!".green());
+                        }
+                        Err(e) => {
+                            println!("{}", format!("❌ Anomaly detection failed: {}", e).red());
+                            return Err(anyhow::anyhow!("Anomaly detection error: {}", e));
                         }
                     }
                 }

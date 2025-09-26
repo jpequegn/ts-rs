@@ -12,6 +12,7 @@ pub mod preprocessing;
 pub mod stats;
 pub mod trend;
 pub mod seasonality;
+pub mod anomaly;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -79,6 +80,20 @@ pub use seasonality::{
 
     // Main result types and configuration
     ComprehensiveSeasonalityAnalysis, SeasonalPeriod, SeasonalityAnalysisConfig
+};
+pub use anomaly::{
+    // Main detection functions
+    detect_anomalies, detect_anomalies_single_method,
+
+    // Configuration
+    AnomalyDetectionConfig, AnomalyMethod, ThresholdConfig, ContextualConfig,
+    ScoringConfig, StreamingConfig, ScoringMethod, SeverityThresholds,
+
+    // Streaming detection
+    streaming::{StreamingAnomalyDetector, StreamingMethod, AdaptiveConfig, LearningConfig},
+
+    // Utilities
+    utils::{StatUtils, DataUtils, ThresholdUtils, AnomalyUtils, DistanceUtils}
 };
 
 /// Result type used throughout the library

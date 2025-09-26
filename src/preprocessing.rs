@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use chrono::Duration;
 
-use crate::{TimeSeries, Result, TimeSeriesError, validation::DataQualityReport};
+use crate::{TimeSeries, Result, validation::DataQualityReport};
 
 /// Preprocessing configuration
 #[derive(Debug, Clone)]
@@ -480,9 +480,91 @@ fn detect_outliers(timeseries: &TimeSeries, method: &OutlierMethod) -> Result<Ve
                 .collect())
         }
 
-        _ => {
-            // TODO: Implement other outlier detection methods
-            Ok(Vec::new())
+        OutlierMethod::ModifiedZScore { threshold } => {
+            let values: Vec<f64> = valid_values.iter().map(|(_, val)| *val).collect();
+            let median = calculate_median(&values);
+
+            // Calculate median absolute deviation (MAD)
+            let mut absolute_deviations: Vec<f64> = values
+                .iter()
+                .map(|val| (val - median).abs())
+                .collect();
+            let mad = calculate_median(&mut absolute_deviations);
+
+            if mad == 0.0 {
+                return Ok(Vec::new());
+            }
+
+            Ok(valid_values
+                .iter()
+                .filter_map(|(idx, val)| {
+                    // Modified Z-score formula: 0.6745 * (x - median) / MAD
+                    let modified_zscore = 0.6745 * (val - median).abs() / mad;
+                    if modified_zscore > *threshold {
+                        Some(*idx)
+                    } else {
+                        None
+                    }
+                })
+                .collect())
+        }
+        OutlierMethod::ThreeSigma => {
+            let values: Vec<f64> = valid_values.iter().map(|(_, val)| *val).collect();
+            let mean = values.iter().sum::<f64>() / values.len() as f64;
+            let variance = values
+                .iter()
+                .map(|val| (val - mean).powi(2))
+                .sum::<f64>() / values.len() as f64;
+            let std_dev = variance.sqrt();
+
+            if std_dev == 0.0 {
+                return Ok(Vec::new());
+            }
+
+            Ok(valid_values
+                .iter()
+                .filter_map(|(idx, val)| {
+                    let z_score = (val - mean).abs() / std_dev;
+                    if z_score > 3.0 { // Three sigma rule
+                        Some(*idx)
+                    } else {
+                        None
+                    }
+                })
+                .collect())
+        }
+        OutlierMethod::IsolationForest { contamination } => {
+            // Simplified isolation forest implementation
+            if valid_values.len() < 10 {
+                return Ok(Vec::new());
+            }
+
+            let values: Vec<f64> = valid_values.iter().map(|(_, val)| *val).collect();
+            let mut scores: Vec<(usize, f64)> = Vec::new();
+
+            // Simple approximation: use multiple random splits
+            let n_trees = 10;
+            let max_depth = (values.len() as f64).log2().ceil() as usize;
+
+            for &(original_idx, value) in &valid_values {
+                let mut path_lengths = Vec::new();
+
+                for _ in 0..n_trees {
+                    let path_length = calculate_isolation_path_length(value, &values, max_depth);
+                    path_lengths.push(path_length);
+                }
+
+                let avg_path_length = path_lengths.iter().sum::<f64>() / path_lengths.len() as f64;
+                let isolation_score = 2.0_f64.powf(-avg_path_length / c_factor(values.len()));
+                scores.push((original_idx, isolation_score));
+            }
+
+            // Sort by score (higher score = more anomalous)
+            scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+            // Take top contamination% as outliers
+            let num_outliers = (scores.len() as f64 * contamination).ceil() as usize;
+            Ok(scores.into_iter().take(num_outliers).map(|(idx, _)| idx).collect())
         }
     }
 }
@@ -546,6 +628,63 @@ fn resample_timeseries(
     // TODO: Implement resampling functionality
     // For now, just return the original time series
     Ok(timeseries)
+}
+
+/// Calculate median of a slice of values
+fn calculate_median(values: &[f64]) -> f64 {
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    let len = sorted.len();
+    if len % 2 == 0 {
+        (sorted[len / 2 - 1] + sorted[len / 2]) / 2.0
+    } else {
+        sorted[len / 2]
+    }
+}
+
+/// Calculate isolation path length for a value
+fn calculate_isolation_path_length(value: f64, data: &[f64], max_depth: usize) -> f64 {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+
+    let mut current_data = data.to_vec();
+    let mut depth = 0;
+
+    while current_data.len() > 1 && depth < max_depth {
+        if current_data.len() == 1 {
+            break;
+        }
+
+        let min_val = current_data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = current_data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
+        if min_val == max_val {
+            break;
+        }
+
+        let split_point = rng.gen_range(min_val..max_val);
+
+        if value < split_point {
+            current_data.retain(|&x| x < split_point);
+        } else {
+            current_data.retain(|&x| x >= split_point);
+        }
+
+        depth += 1;
+    }
+
+    depth as f64
+}
+
+/// Calculate c factor for isolation forest normalization
+fn c_factor(n: usize) -> f64 {
+    if n <= 1 {
+        return 1.0;
+    }
+
+    let n_f64 = n as f64;
+    2.0 * ((n_f64 - 1.0).ln() + std::f64::consts::E.ln()) - (2.0 * (n_f64 - 1.0) / n_f64)
 }
 
 #[cfg(test)]

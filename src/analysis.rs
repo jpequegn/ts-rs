@@ -358,7 +358,7 @@ pub struct Anomaly {
     pub expected_value: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AnomalySeverity {
     Low,
     Medium,
