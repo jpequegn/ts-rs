@@ -9,7 +9,8 @@ use chrono::{Utc, Duration};
 use chronos::{
     ImportConfig, import_csv,
     import::{TimestampColumn},
-    validation::validate_data_quality
+    validation::validate_data_quality,
+    stats::{analyze_timeseries, ExportFormat, export_stats_results}
 };
 
 /// Chronos - A powerful CLI tool for time series analysis
@@ -61,11 +62,39 @@ enum Commands {
         output: String,
     },
 
-    /// Calculate statistical measures for time series data
+    /// Comprehensive statistical analysis for time series data
     Stats {
         /// Path to the CSV file containing time series data
         #[clap(short, long)]
         file: String,
+
+        /// Column name to analyze
+        #[clap(short, long, default_value = "value")]
+        column: String,
+
+        /// Export results to file (optional)
+        #[clap(short, long)]
+        output: Option<String>,
+
+        /// Export format: json, csv, text, markdown, html
+        #[clap(long, default_value = "text")]
+        format: String,
+
+        /// Perform normality tests
+        #[clap(long)]
+        test_normality: bool,
+
+        /// Compute autocorrelation function with specified maximum lags
+        #[clap(long, default_value = "50")]
+        autocorr_lags: usize,
+
+        /// Test stationarity with specified test (adf, kpss, pp, or all)
+        #[clap(long, default_value = "adf")]
+        stationarity_test: String,
+
+        /// Detect change points
+        #[clap(long)]
+        detect_changepoints: bool,
     },
 }
 
@@ -197,101 +226,133 @@ fn main() -> Result<()> {
             println!("{}", "✅ Chart created! (placeholder)".green());
         }
 
-        Commands::Stats { file } => {
-            println!("{}", "📋 Calculating statistics...".cyan().bold());
+        Commands::Stats {
+            file,
+            column,
+            output,
+            format,
+            test_normality,
+            autocorr_lags,
+            stationarity_test,
+            detect_changepoints
+        } => {
+            println!("{}", "📊 Performing comprehensive statistical analysis...".cyan().bold());
             println!("File: {}", file);
+            println!("Column: {}", column);
 
-            // Import the CSV data with auto-detection
-            match import_csv(file, ImportConfig::default()) {
+            // Configure import to target specific column
+            let mut config = ImportConfig::default();
+            config.csv_config.value_columns = vec![column.clone()];
+
+            // Import the CSV data
+            match import_csv(file, config) {
                 Ok(result) => {
                     println!("{}", "✅ Data imported successfully!".green());
 
-                    println!("\n📊 Import Statistics:");
-                    println!("  Rows processed: {}", result.stats.rows_processed);
-                    println!("  Rows skipped: {}", result.stats.rows_skipped);
-                    println!("  Missing values: {}", result.stats.missing_values);
-
-                    // Calculate detailed statistics for the time series
                     let ts = &result.timeseries;
+                    println!("  Imported {} data points", ts.values.len());
 
-                    println!("\n📈 Time Series Statistics:");
-                    println!("  Total data points: {}", ts.values.len());
-
-                    if !ts.values.is_empty() {
-                        let valid_values: Vec<f64> = ts.values.iter()
-                                .filter(|&&v| !v.is_nan() && !v.is_infinite())
-                                .copied()
-                                .collect();
-
-                        let nan_count = ts.values.iter().filter(|&&v| v.is_nan()).count();
-                        let inf_count = ts.values.iter().filter(|&&v| v.is_infinite()).count();
-
-                        println!("  Valid data points: {}", valid_values.len());
-                        println!("  NaN values: {}", nan_count);
-                        println!("  Infinite values: {}", inf_count);
-
-                        if !valid_values.is_empty() {
-                            // Basic statistics
-                            let mean = valid_values.iter().sum::<f64>() / valid_values.len() as f64;
-                            let min = valid_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                            let max = valid_values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-
-                            // Calculate variance and standard deviation
-                            let variance = valid_values.iter()
-                                .map(|&x| (x - mean).powi(2))
-                                .sum::<f64>() / valid_values.len() as f64;
-                            let std_dev = variance.sqrt();
-
-                            // Calculate percentiles
-                            let mut sorted_values = valid_values.clone();
-                            sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                            let median = if sorted_values.len() % 2 == 0 {
-                                let mid = sorted_values.len() / 2;
-                                (sorted_values[mid - 1] + sorted_values[mid]) / 2.0
-                            } else {
-                                sorted_values[sorted_values.len() / 2]
-                            };
-
-                            println!("\n  Descriptive Statistics:");
-                            println!("    Mean: {:.6}", mean);
-                            println!("    Median: {:.6}", median);
-                            println!("    Standard Deviation: {:.6}", std_dev);
-                            println!("    Variance: {:.6}", variance);
-                            println!("    Minimum: {:.6}", min);
-                            println!("    Maximum: {:.6}", max);
-                            println!("    Range: {:.6}", max - min);
-                        }
+                    if ts.values.is_empty() {
+                        println!("{}", "❌ No valid data found for analysis".red());
+                        return Ok(());
                     }
 
-                    // Data quality analysis
-                    let quality_report = validate_data_quality(&ts.timestamps, &ts.values);
-                    println!("\n  Data Quality:");
-                    println!("    Quality Score: {:.1}%", quality_report.quality_score(ts.timestamps.len()) * 100.0);
-                    if quality_report.has_issues() {
-                        if quality_report.nan_count > 0 {
-                            println!("    ⚠️  {} NaN values found", quality_report.nan_count);
-                        }
-                        if quality_report.infinite_count > 0 {
-                            println!("    ⚠️  {} infinite values found", quality_report.infinite_count);
-                        }
-                        if quality_report.duplicate_timestamps > 0 {
-                            println!("    ⚠️  {} duplicate timestamps found", quality_report.duplicate_timestamps);
-                        }
-                        if !quality_report.gaps.is_empty() {
-                            println!("    ⚠️  {} time gaps detected", quality_report.gaps.len());
-                        }
-                        if quality_report.potential_outliers > 0 {
-                            println!("    ⚠️  {} potential outliers detected", quality_report.potential_outliers);
-                        }
-                    } else {
-                        println!("    ✅ No data quality issues detected");
-                    }
+                    // Perform comprehensive statistical analysis
+                    match analyze_timeseries(&ts.timestamps, &ts.values, column) {
+                        Ok(stats_result) => {
+                            println!("{}", "✅ Statistical analysis completed!".green());
 
-                    println!("{}", "\n✅ Statistics calculated!".green());
+                            // Display results to console
+                            let summary = stats_result.summary();
+                            println!("\n{}", summary);
+
+                            // Additional specific analyses based on flags
+                            if *test_normality {
+                                if let Some(ref dist) = stats_result.distribution {
+                                    if let Some(ref norm_test) = dist.normality_test {
+                                        println!("\n🔍 Normality Test Results:");
+                                        println!("  Test: {}", norm_test.test_name);
+                                        println!("  Statistic: {:.6}", norm_test.statistic);
+                                        println!("  P-value: {:.6}", norm_test.p_value);
+                                        println!("  Is Normal: {}",
+                                            if norm_test.is_normal { "✅ Yes" } else { "❌ No" });
+                                    }
+                                }
+                            }
+
+                            if *autocorr_lags > 0 {
+                                if let Some(ref ts_stats) = stats_result.timeseries_stats {
+                                    println!("\n📈 Autocorrelation Analysis (first 10 lags):");
+                                    for (i, (&lag, &acf_val)) in ts_stats.acf.lags.iter()
+                                        .zip(ts_stats.acf.values.iter()).enumerate().take(10) {
+                                        println!("  Lag {}: {:.4}", lag, acf_val);
+                                    }
+
+                                    if let Some(ref ljung_box) = ts_stats.acf.ljung_box_test {
+                                        println!("\n  Ljung-Box Test:");
+                                        println!("    Statistic: {:.4}", ljung_box.statistic);
+                                        println!("    P-value: {:.4}", ljung_box.p_value);
+                                        println!("    Autocorrelation detected: {}",
+                                            if ljung_box.has_autocorrelation { "Yes" } else { "No" });
+                                    }
+                                }
+                            }
+
+                            if stationarity_test != "none" {
+                                println!("\n🔬 Stationarity Test Results:");
+                                for (test_name, test_result) in &stats_result.stationarity_tests {
+                                    println!("  {} Test:", test_name);
+                                    println!("    Statistic: {:.6}", test_result.statistic);
+                                    println!("    P-value: {:.6}", test_result.p_value);
+                                    println!("    Is Stationary: {}",
+                                        if test_result.is_stationary { "✅ Yes" } else { "❌ No" });
+                                }
+                            }
+
+                            if *detect_changepoints && !stats_result.changepoints.is_empty() {
+                                println!("\n🎯 Change Points Detected:");
+                                println!("  Total: {}", stats_result.changepoints.len());
+                                for (i, cp) in stats_result.changepoints.iter().enumerate().take(5) {
+                                    println!("    Point {}: Index {} (Confidence: {:.2})",
+                                        i + 1, cp.index, cp.confidence);
+                                }
+                                if stats_result.changepoints.len() > 5 {
+                                    println!("    ... and {} more", stats_result.changepoints.len() - 5);
+                                }
+                            }
+
+                            // Export results if requested
+                            if let Some(output_file) = output {
+                                let export_format = match format.as_str() {
+                                    "json" => ExportFormat::Json,
+                                    "csv" => ExportFormat::Csv,
+                                    "markdown" | "md" => ExportFormat::Markdown,
+                                    "html" => ExportFormat::Html,
+                                    _ => ExportFormat::TextReport,
+                                };
+
+                                match export_stats_results(&stats_result, export_format,
+                                    std::path::Path::new(output_file), None) {
+                                    Ok(()) => {
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                    Err(e) => {
+                                        println!("{}", format!("⚠️  Export failed: {}", e).yellow());
+                                    }
+                                }
+                            }
+
+                            println!("{}", "\n✅ Statistical analysis complete!".green());
+                        }
+                        Err(e) => {
+                            println!("{}", format!("❌ Statistical analysis failed: {}", e).red());
+                            return Err(anyhow::anyhow!("Statistical analysis error: {}", e));
+                        }
+                    }
                 }
                 Err(e) => {
                     println!("{}", format!("❌ Error importing data: {}", e).red());
-                    return Err(anyhow::anyhow!("{}", e));
+                    return Err(anyhow::anyhow!("Import error: {}", e));
                 }
             }
         }
