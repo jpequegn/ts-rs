@@ -14,6 +14,11 @@ use chronos::{
     trend::{
         analyze_comprehensive, TrendAnalysisConfig, DecompositionMethod,
         perform_decomposition, detect_trend, perform_detrending, DetrendingMethod
+    },
+    seasonality::{
+        detect_seasonality, SeasonalityMethod, analyze_seasonal_patterns,
+        perform_seasonal_adjustment, SeasonalAdjustmentMethod,
+        SeasonalityAnalysisConfig, SeasonalPeriod, SeasonalPeriodType
     }
 };
 
@@ -162,6 +167,77 @@ enum Commands {
         /// Generate plot data for visualization
         #[clap(long)]
         plot: bool,
+    },
+
+    /// Comprehensive seasonality detection and analysis for time series data
+    Seasonal {
+        /// Path to the CSV file containing time series data
+        #[clap(short, long)]
+        file: String,
+
+        /// Column name to analyze
+        #[clap(short, long, default_value = "value")]
+        column: String,
+
+        /// Timestamp column name
+        #[clap(short, long, default_value = "timestamp")]
+        time_column: String,
+
+        /// Analysis method: detect, strength, adjust
+        #[clap(short, long, default_value = "detect")]
+        method: String,
+
+        /// Maximum period to consider for detection
+        #[clap(long, default_value = "365")]
+        max_period: usize,
+
+        /// Minimum period to consider for detection
+        #[clap(long, default_value = "2")]
+        min_period: usize,
+
+        /// Seasonal periods to analyze (comma-separated, e.g., "7,30,365")
+        #[clap(long)]
+        periods: Option<String>,
+
+        /// Seasonal adjustment method: x13, stl, moving_average
+        #[clap(long, default_value = "stl")]
+        adjustment_method: String,
+
+        /// Detection methods: fourier, periodogram, autocorr, all
+        #[clap(long, default_value = "all")]
+        detection_methods: String,
+
+        /// Significance level for statistical tests
+        #[clap(long, default_value = "0.05")]
+        alpha: f64,
+
+        /// Export adjusted series (for adjust method)
+        #[clap(long)]
+        export_adjusted: bool,
+
+        /// Export results to file (optional)
+        #[clap(short, long)]
+        output: Option<String>,
+
+        /// Export format: json, text, markdown
+        #[clap(long, default_value = "text")]
+        format: String,
+
+        /// Generate plot data for visualization
+        #[clap(long)]
+        plot: bool,
+
+        /// Analyze calendar effects
+        #[clap(long)]
+        calendar_effects: bool,
+
+        /// Detect evolving seasonality
+        #[clap(long)]
+        evolving: bool,
+
+        /// Detect seasonal breaks
+        #[clap(long)]
+        breaks: bool,
     },
 }
 
@@ -712,6 +788,326 @@ fn main() -> Result<()> {
                         Err(e) => {
                             println!("{}", format!("❌ Statistical analysis failed: {}", e).red());
                             return Err(anyhow::anyhow!("Statistical analysis error: {}", e));
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{}", format!("❌ Error importing data: {}", e).red());
+                    return Err(anyhow::anyhow!("Import error: {}", e));
+                }
+            }
+        }
+
+        Commands::Seasonal {
+            file,
+            column,
+            time_column,
+            method,
+            max_period,
+            min_period,
+            periods,
+            adjustment_method,
+            detection_methods,
+            alpha,
+            export_adjusted,
+            output,
+            format,
+            plot,
+            calendar_effects,
+            evolving,
+            breaks,
+        } => {
+            println!("{}", "🌊 Performing seasonality analysis...".cyan().bold());
+            println!("File: {}", file);
+            println!("Column: {}", column);
+            println!("Method: {}", method);
+
+            // Configure import to target specific column
+            let mut config = ImportConfig::default();
+            config.csv_config.timestamp_column = TimestampColumn::Name(time_column.clone());
+            config.csv_config.value_columns = vec![column.clone()];
+
+            // Import the CSV data
+            match import_csv(file, config) {
+                Ok(result) => {
+                    println!("{}", "✅ Data imported successfully!".green());
+
+                    let ts = &result.timeseries;
+                    println!("  Imported {} data points", ts.values.len());
+
+                    if ts.values.is_empty() {
+                        println!("{}", "❌ No valid data found for analysis".red());
+                        return Ok(());
+                    }
+
+                    match method.as_str() {
+                        "detect" => {
+                            // Seasonality detection
+                            let methods = match detection_methods.as_str() {
+                                "fourier" => vec![SeasonalityMethod::Fourier],
+                                "periodogram" => vec![SeasonalityMethod::Periodogram],
+                                "autocorr" => vec![SeasonalityMethod::Autocorrelation],
+                                "all" => vec![
+                                    SeasonalityMethod::Fourier,
+                                    SeasonalityMethod::Periodogram,
+                                    SeasonalityMethod::Autocorrelation
+                                ],
+                                _ => vec![SeasonalityMethod::Fourier],
+                            };
+
+                            let mut seasonal_config = SeasonalityAnalysisConfig::default();
+                            seasonal_config.max_period = *max_period;
+                            seasonal_config.min_period = *min_period;
+                            seasonal_config.alpha = *alpha;
+                            seasonal_config.detection_methods = methods;
+                            seasonal_config.generate_plot_data = *plot;
+                            seasonal_config.analyze_calendar_effects = *calendar_effects;
+                            // Evolving seasonality is handled in advanced analysis
+                            // Seasonal breaks are handled in advanced analysis
+
+                            match detect_seasonality(&ts.values, &seasonal_config) {
+                                Ok(detection_result) => {
+                                    println!("{}", "✅ Seasonality detection completed!".green());
+
+                                    println!("\n🔍 Detection Results:");
+                                    if detection_result.seasonal_periods.is_empty() {
+                                        println!("  No significant seasonal periods detected");
+                                    } else {
+                                        for period in &detection_result.seasonal_periods {
+                                            println!("  Period {} (strength: {:.3}, confidence: {:.3})",
+                                                period.period, period.strength, period.confidence);
+                                        }
+                                    }
+
+                                    println!("\n📊 Quality Metrics:");
+                                    println!("  Seasonality Score: {:.3}", detection_result.overall_seasonality);
+                                    println!("  Method: {:?}", detection_result.method);
+
+                                    if let Some(spectrum) = &detection_result.fourier_analysis {
+                                        println!("\n🌊 Fourier Analysis:");
+                                        if let Some((freq, _)) = spectrum.dominant_frequencies.first() {
+                            println!("  Dominant Frequency: {:.6}", freq);
+                        }
+                                        let max_power = spectrum.power_spectrum.iter().fold(0.0f64, |a, &b| a.max(b));
+                        println!("  Peak Power: {:.3}", max_power);
+                                    }
+
+                                    // Export results if requested
+                                    if let Some(output_file) = output {
+                                        let export_content = match format.as_str() {
+                                            "json" => serde_json::to_string_pretty(&detection_result)?,
+                                            "markdown" | "md" => {
+                                                let mut md = "# Seasonality Detection Report\n\n".to_string();
+                                                md.push_str(&format!("## Detected Periods\n"));
+                                                for period in &detection_result.seasonal_periods {
+                                                    md.push_str(&format!("- Period {}: strength {:.3}, confidence {:.3}\n",
+                                                        period.period, period.strength, period.confidence));
+                                                }
+                                                md.push_str(&format!("\n## Quality Metrics\n"));
+                                                md.push_str(&format!("- Seasonality Score: {:.3}\n",
+                                                    detection_result.overall_seasonality));
+                                                if let Some(ref fourier) = detection_result.fourier_analysis {
+                                                    md.push_str(&format!("- Signal-to-Noise: {:.3}\n", fourier.snr));
+                                                }
+                                                md
+                                            },
+                                            _ => {
+                                                let mut text = "Seasonality Detection Results\n".to_string();
+                                                text.push_str("================================\n\n");
+                                                text.push_str("Detected Periods:\n");
+                                                for period in &detection_result.seasonal_periods {
+                                                    text.push_str(&format!("  Period {}: strength {:.3}, confidence {:.3}\n",
+                                                        period.period, period.strength, period.confidence));
+                                                }
+                                                text.push_str(&format!("\nSeasonality Score: {:.3}\n",
+                                                    detection_result.overall_seasonality));
+                                                text
+                                            },
+                                        };
+
+                                        std::fs::write(output_file, export_content)?;
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Seasonality detection failed: {}", e).red());
+                                    return Err(anyhow::anyhow!("Seasonality detection error: {}", e));
+                                }
+                            }
+                        },
+
+                        "strength" => {
+                            // Analyze seasonal strength for specific periods
+                            let target_periods: Vec<usize> = if let Some(periods_str) = periods {
+                                periods_str.split(',')
+                                    .filter_map(|s| s.trim().parse().ok())
+                                    .collect()
+                            } else {
+                                vec![7, 30, 365] // Default periods
+                            };
+
+                            println!("\n📊 Analyzing seasonal strength for periods: {:?}", target_periods);
+
+                            // Convert periods to SeasonalPeriod structs for pattern analysis
+                            let seasonal_periods: Vec<SeasonalPeriod> = target_periods
+                                .iter()
+                                .map(|&p| SeasonalPeriod {
+                                    period: p as f64,
+                                    strength: 0.0, // Will be calculated
+                                    phase: 0.0,
+                                    amplitude: 0.0,
+                                    confidence: 0.95,
+                                    period_type: if p == 7 { SeasonalPeriodType::Weekly }
+                                               else if p == 30 { SeasonalPeriodType::Monthly }
+                                               else if p == 365 { SeasonalPeriodType::Yearly }
+                                               else { SeasonalPeriodType::Custom(p as f64) },
+                                })
+                                .collect();
+
+                            match analyze_seasonal_patterns(&ts.values, &seasonal_periods) {
+                                Ok(pattern_analysis) => {
+                                    println!("{}", "✅ Seasonal pattern analysis completed!".green());
+
+                                    println!("\n📈 Seasonal Strength Results:");
+                                    println!("  Overall Strength: {:.3}", pattern_analysis.overall_strength.strength);
+                                    println!("  P-Value: {:.3}, Confidence: ({:.3}, {:.3})",
+                                        pattern_analysis.overall_strength.p_value,
+                                        pattern_analysis.overall_strength.confidence_interval.0,
+                                        pattern_analysis.overall_strength.confidence_interval.1);
+
+                                    if let Some(ref consistency) = pattern_analysis.consistency {
+                                        println!("\n🎯 Pattern Consistency:");
+                                        println!("  Overall Score: {:.3}", consistency.consistency_score);
+                                        println!("  Stability Index: {:.3}", consistency.temporal_stability);
+                                    }
+
+                                    // Export results if requested
+                                    if let Some(output_file) = output {
+                                        let export_content = match format.as_str() {
+                                            "json" => serde_json::to_string_pretty(&pattern_analysis)?,
+                                            "markdown" | "md" => {
+                                                let mut md = "# Seasonal Strength Analysis\n\n".to_string();
+                                                md.push_str("## Seasonal Strengths\n");
+                                                md.push_str(&format!("- Overall Strength: {:.3} (p-value: {:.3})\n",
+                                                    pattern_analysis.overall_strength.strength, pattern_analysis.overall_strength.p_value));
+                                                if let Some(ref consistency) = pattern_analysis.consistency {
+                                                    md.push_str(&format!("\n## Pattern Consistency: {:.3}\n",
+                                                        consistency.consistency_score));
+                                                }
+                                                md
+                                            },
+                                            _ => {
+                                                let mut text = "Seasonal Strength Analysis\n".to_string();
+                                                text.push_str("===============================\n\n");
+                                                text.push_str(&format!("Overall Strength: {:.3}\n", pattern_analysis.overall_strength.strength));
+                                                text
+                                            },
+                                        };
+
+                                        std::fs::write(output_file, export_content)?;
+                                        println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Seasonal pattern analysis failed: {}", e).red());
+                                    return Err(anyhow::anyhow!("Seasonal pattern analysis error: {}", e));
+                                }
+                            }
+                        },
+
+                        "adjust" => {
+                            // Seasonal adjustment
+                            let adj_method = match adjustment_method.as_str() {
+                                "x13" => SeasonalAdjustmentMethod::X13Arima,
+                                "moving_average" => SeasonalAdjustmentMethod::MovingAverage,
+                                _ => SeasonalAdjustmentMethod::STL,
+                            };
+
+                            // First detect seasonality to get periods
+                            let mut detect_config = SeasonalityAnalysisConfig::default();
+                            detect_config.max_period = *max_period;
+                            detect_config.min_period = *min_period;
+                            detect_config.alpha = *alpha;
+
+                            match detect_seasonality(&ts.values, &detect_config) {
+                                Ok(detection_result) => {
+                                    if detection_result.seasonal_periods.is_empty() {
+                                        println!("{}", "⚠️  No seasonal periods detected for adjustment".yellow());
+                                        return Ok(());
+                                    }
+
+                                    println!("  Detected {} seasonal periods for adjustment", detection_result.seasonal_periods.len());
+
+                                    match perform_seasonal_adjustment(&ts.values, adj_method, &detection_result.seasonal_periods) {
+                                        Ok(adjustment_result) => {
+                                            println!("{}", "✅ Seasonal adjustment completed!".green());
+
+                                            println!("\n📉 Adjustment Results:");
+                                            println!("  Method: {:?}", adjustment_result.method);
+                                            println!("  Seasonally Adjusted Points: {}", adjustment_result.adjusted_series.len());
+
+                                            println!("\n📊 Quality Assessment:");
+                                            println!("  Quality Score: {:.3}", adjustment_result.diagnostics.quality_score);
+                                            println!("  Adjustment Method: {:?}", adjustment_result.method);
+
+                                            // Export adjusted series if requested
+                                            if *export_adjusted {
+                                                let adjusted_file = output.as_ref()
+                                                    .map(|f| f.replace(".csv", "_adjusted.csv"))
+                                                    .unwrap_or_else(|| "adjusted_series.csv".to_string());
+
+                                                let mut file = File::create(&adjusted_file)?;
+                                                writeln!(file, "timestamp,original,adjusted")?;
+                                                for (i, (&original, &adjusted)) in ts.values.iter()
+                                                    .zip(adjustment_result.adjusted_series.iter()).enumerate() {
+                                                    if i < ts.timestamps.len() {
+                                                        writeln!(file, "{},{:.6},{:.6}",
+                                                            ts.timestamps[i].format("%Y-%m-%d %H:%M:%S"),
+                                                            original, adjusted)?;
+                                                    }
+                                                }
+                                                println!("{}", format!("\n💾 Adjusted series exported to: {}", adjusted_file).green());
+                                            }
+
+                                            // Export results if requested
+                                            if let Some(output_file) = output {
+                                                let export_content = match format.as_str() {
+                                                    "json" => serde_json::to_string_pretty(&adjustment_result)?,
+                                                    "markdown" | "md" => {
+                                                        format!("# Seasonal Adjustment Report\n\n## Method\n{:?}\n\n## Quality Metrics\n- Quality Score: {:.3}\n- Adjusted Points: {}",
+                                                            adjustment_result.method,
+                                                            adjustment_result.diagnostics.quality_score,
+                                                            adjustment_result.adjusted_series.len())
+                                                    },
+                                                    _ => {
+                                                        format!("Seasonal Adjustment Results\nMethod: {:?}\nQuality Score: {:.3}\nAdjusted Points: {}",
+                                                            adjustment_result.method,
+                                                            adjustment_result.diagnostics.quality_score,
+                                                            adjustment_result.adjusted_series.len())
+                                                    },
+                                                };
+
+                                                std::fs::write(output_file, export_content)?;
+                                                println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                                            }
+                                        }
+                                        Err(e) => {
+                                            println!("{}", format!("❌ Seasonal adjustment failed: {}", e).red());
+                                            return Err(anyhow::anyhow!("Seasonal adjustment error: {}", e));
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("{}", format!("❌ Error detecting seasonality for adjustment: {}", e).red());
+                                    return Err(anyhow::anyhow!("Seasonality detection error: {}", e));
+                                }
+                            }
+                        },
+
+                        _ => {
+                            println!("{}", format!("❌ Unknown method: {}", method).red());
+                            println!("Available methods: detect, strength, adjust");
+                            return Err(anyhow::anyhow!("Invalid method"));
                         }
                     }
                 }

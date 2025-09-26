@@ -62,3 +62,6 @@ walkdir = "2.3"
 [dev-dependencies]
 # Temporary files for testing
 tempfile = "3.0"
+
+# Random number generation for tests
+rand = "0.8"
