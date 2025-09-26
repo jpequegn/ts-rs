@@ -11,6 +11,7 @@ pub mod import;
 pub mod preprocessing;
 pub mod stats;
 pub mod trend;
+pub mod seasonality;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -49,6 +50,35 @@ pub use trend::{
 
     // Main result types
     ComprehensiveTrendAnalysis, TrendSummary
+};
+pub use seasonality::{
+    // Main analysis functions
+    analyze_comprehensive_seasonality,
+
+    // Detection
+    SeasonalityDetectionResult, SeasonalityMethod, detect_seasonality,
+    detect_multiple_seasonalities, analyze_fourier_spectrum, compute_periodogram,
+    FourierAnalysis, PeriodogramAnalysis, AutocorrelationAnalysis,
+
+    // Pattern analysis
+    SeasonalPatternAnalysis, SeasonalStrength, PatternConsistency,
+    analyze_seasonal_patterns, compute_seasonal_strength, analyze_pattern_consistency,
+
+    // Adjustment
+    SeasonalAdjustmentMethod, SeasonalAdjustmentResult, perform_seasonal_adjustment,
+    apply_x13_adjustment, apply_moving_average_adjustment, apply_stl_adjustment,
+
+    // Calendar effects
+    CalendarEffects, HolidayImpact, TradingDayEffects, LeapYearAdjustment,
+    detect_calendar_effects, detect_holiday_impacts, analyze_trading_day_effects,
+
+    // Advanced features
+    AdvancedSeasonalityAnalysis, MultipleSeasonalPeriods, EvolvingSeasonality,
+    SeasonalBreaks, detect_evolving_seasonality, find_seasonal_breaks,
+    analyze_multiple_seasonal_periods, comprehensive_seasonality_analysis,
+
+    // Main result types and configuration
+    ComprehensiveSeasonalityAnalysis, SeasonalPeriod, SeasonalityAnalysisConfig
 };
 
 /// Result type used throughout the library
