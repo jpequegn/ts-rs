@@ -10,7 +10,9 @@
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(git branch:*)",
-      "Read(//c/tmp/**)"
+      "Read(//c/tmp/**)",
+      "Read(///**)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

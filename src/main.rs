@@ -24,6 +24,11 @@ use chronos::{
         detect_anomalies, AnomalyDetectionConfig,
         AnomalyMethod, ThresholdConfig, ContextualConfig, ScoringConfig,
         StreamingConfig, ScoringMethod
+    },
+    forecasting::{
+        forecast_timeseries, forecast_with_intervals, evaluate_forecast_model,
+        ForecastConfig, ForecastMethod, SeasonalType, ETSComponent, GrowthType,
+        SeasonalityMode, EnsembleCombination
     }
 };
 
@@ -338,6 +343,105 @@ enum Commands {
         /// Show detailed analysis for each method
         #[clap(long)]
         detailed: bool,
+    },
+
+    /// Time series forecasting and prediction
+    Forecast {
+        /// Path to the CSV file containing time series data
+        #[clap(short, long)]
+        file: String,
+
+        /// Column name to forecast
+        #[clap(short, long, default_value = "value")]
+        column: String,
+
+        /// Timestamp column name
+        #[clap(short, long, default_value = "timestamp")]
+        time_column: String,
+
+        /// Forecasting method: sma, wma, exp_smoothing, linear_trend, seasonal_naive, holt_winters, arima, sarima, auto_arima, ets, theta, prophet, ensemble
+        #[clap(short, long, default_value = "sma")]
+        method: String,
+
+        /// Number of periods to forecast
+        #[clap(long, default_value = "10")]
+        horizon: usize,
+
+        /// Confidence level for prediction intervals (0.0 to 1.0)
+        #[clap(long, default_value = "0.95")]
+        confidence: f64,
+
+        /// Window size for moving averages
+        #[clap(long, default_value = "5")]
+        window: usize,
+
+        /// Smoothing parameter alpha (0.0 to 1.0)
+        #[clap(long, default_value = "0.3")]
+        alpha: f64,
+
+        /// Trend smoothing parameter beta (0.0 to 1.0)
+        #[clap(long, default_value = "0.1")]
+        beta: f64,
+
+        /// Seasonal smoothing parameter gamma (0.0 to 1.0)
+        #[clap(long, default_value = "0.1")]
+        gamma: f64,
+
+        /// Seasonal period for seasonal methods
+        #[clap(long)]
+        seasonal_period: Option<usize>,
+
+        /// Seasonal type: additive, multiplicative
+        #[clap(long, default_value = "additive")]
+        seasonal_type: String,
+
+        /// ARIMA order p (autoregressive)
+        #[clap(long, default_value = "1")]
+        p: usize,
+
+        /// ARIMA order d (differencing)
+        #[clap(long, default_value = "1")]
+        d: usize,
+
+        /// ARIMA order q (moving average)
+        #[clap(long, default_value = "1")]
+        q: usize,
+
+        /// Seasonal ARIMA order P
+        #[clap(long, default_value = "1")]
+        seasonal_p: usize,
+
+        /// Seasonal ARIMA order D
+        #[clap(long, default_value = "1")]
+        seasonal_d: usize,
+
+        /// Seasonal ARIMA order Q
+        #[clap(long, default_value = "1")]
+        seasonal_q: usize,
+
+        /// Theta parameter for Theta method
+        #[clap(long, default_value = "2.0")]
+        theta: f64,
+
+        /// Include prediction intervals
+        #[clap(long)]
+        intervals: bool,
+
+        /// Evaluate model performance using cross-validation
+        #[clap(long)]
+        evaluate: bool,
+
+        /// Export forecast results to file (optional)
+        #[clap(short, long)]
+        output: Option<String>,
+
+        /// Export format: json, csv, text, markdown
+        #[clap(long, default_value = "text")]
+        format: String,
+
+        /// Export forecast values to CSV
+        #[clap(long)]
+        export_forecast: bool,
     },
 }
 
@@ -1516,6 +1620,312 @@ fn main() -> Result<()> {
                         Err(e) => {
                             println!("{}", format!("❌ Anomaly detection failed: {}", e).red());
                             return Err(anyhow::anyhow!("Anomaly detection error: {}", e));
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{}", format!("❌ Error importing data: {}", e).red());
+                    return Err(anyhow::anyhow!("Import error: {}", e));
+                }
+            }
+        }
+
+        Commands::Forecast {
+            file,
+            column,
+            time_column,
+            method,
+            horizon,
+            confidence,
+            window,
+            alpha,
+            beta,
+            gamma,
+            seasonal_period,
+            seasonal_type,
+            p,
+            d,
+            q,
+            seasonal_p,
+            seasonal_d,
+            seasonal_q,
+            theta,
+            intervals,
+            evaluate,
+            output,
+            format,
+            export_forecast,
+        } => {
+            println!("{}", "🔮 Performing time series forecasting...".cyan().bold());
+            println!("File: {}", file);
+            println!("Column: {}", column);
+            println!("Method: {}", method);
+            println!("Horizon: {} periods", horizon);
+
+            // Configure import to target specific column
+            let mut config = ImportConfig::default();
+            config.csv_config.timestamp_column = TimestampColumn::Name(time_column.clone());
+            config.csv_config.value_columns = vec![column.clone()];
+
+            // Import the CSV data
+            match import_csv(file, config) {
+                Ok(result) => {
+                    println!("{}", "✅ Data imported successfully!".green());
+
+                    let ts = &result.timeseries;
+                    println!("  Imported {} data points", ts.values.len());
+
+                    if ts.values.is_empty() {
+                        println!("{}", "❌ No valid data found for forecasting".red());
+                        return Ok(());
+                    }
+
+                    if ts.values.len() < 3 {
+                        println!("{}", "❌ Need at least 3 data points for forecasting".red());
+                        return Ok(());
+                    }
+
+                    // Parse seasonal type
+                    let seasonal_type_enum = match seasonal_type.as_str() {
+                        "multiplicative" => SeasonalType::Multiplicative,
+                        _ => SeasonalType::Additive,
+                    };
+
+                    // Create forecast method based on CLI parameters
+                    let forecast_method = match method.as_str() {
+                        "sma" | "simple_moving_average" => ForecastMethod::SimpleMovingAverage { window: *window },
+                        "exp_smoothing" | "exponential_smoothing" => ForecastMethod::ExponentialSmoothing { alpha: *alpha },
+                        "linear_trend" => ForecastMethod::LinearTrend,
+                        "seasonal_naive" => {
+                            let period = seasonal_period.unwrap_or(12);
+                            ForecastMethod::SeasonalNaive { seasonal_period: period }
+                        },
+                        "holt_winters" => {
+                            let period = seasonal_period.unwrap_or(12);
+                            ForecastMethod::HoltWinters {
+                                alpha: *alpha,
+                                beta: *beta,
+                                gamma: *gamma,
+                                seasonal_period: period,
+                                seasonal_type: seasonal_type_enum,
+                            }
+                        },
+                        "arima" => ForecastMethod::ARIMA { p: *p, d: *d, q: *q },
+                        "sarima" => {
+                            let period = seasonal_period.unwrap_or(12);
+                            ForecastMethod::SARIMA {
+                                p: *p, d: *d, q: *q,
+                                seasonal_p: *seasonal_p,
+                                seasonal_d: *seasonal_d,
+                                seasonal_q: *seasonal_q,
+                                seasonal_period: period,
+                            }
+                        },
+                        "auto_arima" => {
+                            ForecastMethod::AutoARIMA {
+                                max_p: *p,
+                                max_d: *d,
+                                max_q: *q,
+                                max_seasonal_p: *seasonal_p,
+                                max_seasonal_d: *seasonal_d,
+                                max_seasonal_q: *seasonal_q,
+                                seasonal_period: *seasonal_period,
+                            }
+                        },
+                        "ets" => {
+                            ForecastMethod::ETS {
+                                error_type: ETSComponent::Additive,
+                                trend_type: ETSComponent::Additive,
+                                seasonal_type: ETSComponent::Additive,
+                                seasonal_period: *seasonal_period,
+                            }
+                        },
+                        "theta" => ForecastMethod::Theta { theta: *theta },
+                        "prophet" => {
+                            ForecastMethod::Prophet {
+                                growth: GrowthType::Linear,
+                                seasonality_mode: SeasonalityMode::Additive,
+                                yearly_seasonality: true,
+                                weekly_seasonality: true,
+                                daily_seasonality: false,
+                            }
+                        },
+                        _ => ForecastMethod::SimpleMovingAverage { window: *window },
+                    };
+
+                    // Create forecast configuration
+                    let forecast_config = ForecastConfig {
+                        method: forecast_method,
+                        horizon: *horizon,
+                        confidence_level: *confidence,
+                        include_intervals: *intervals,
+                        evaluation: chronos::forecasting::EvaluationConfig::default(),
+                        features: chronos::forecasting::FeatureConfig::default(),
+                    };
+
+                    // Perform forecasting
+                    let forecast_result = if *intervals {
+                        forecast_with_intervals(ts, &forecast_config)
+                    } else {
+                        forecast_timeseries(ts, &forecast_config)
+                    };
+
+                    match forecast_result {
+                        Ok(result) => {
+                            println!("{}", "✅ Forecasting completed!".green());
+
+                            println!("\n🔮 Forecast Results:");
+                            println!("  Method: {}", result.method);
+                            println!("  Horizon: {} periods", result.forecasts.len());
+                            if result.confidence_level > 0.0 {
+                                println!("  Confidence Level: {:.1}%", result.confidence_level * 100.0);
+                            }
+
+                            // Display forecast values
+                            println!("\n📊 Forecasted Values:");
+                            for (i, (&forecast, timestamp)) in result.forecasts.iter()
+                                .zip(result.timestamps.iter()).enumerate().take(10) {
+                                let mut line = format!("  Period {}: {:.4} at {}",
+                                    i + 1, forecast, timestamp.format("%Y-%m-%d %H:%M:%S"));
+
+                                if let (Some(lower), Some(upper)) = (&result.lower_bounds, &result.upper_bounds) {
+                                    if let (Some(&lower_val), Some(&upper_val)) = (lower.get(i), upper.get(i)) {
+                                        line.push_str(&format!(" [{:.4}, {:.4}]", lower_val, upper_val));
+                                    }
+                                }
+                                println!("{}", line);
+                            }
+
+                            if result.forecasts.len() > 10 {
+                                println!("  ... and {} more periods", result.forecasts.len() - 10);
+                            }
+
+                            // Display model evaluation if available
+                            if let Some(ref eval_result) = result.evaluation {
+                                println!("\n📈 Model Performance:");
+                                println!("  MAE: {:.4}", eval_result.mae);
+                                println!("  RMSE: {:.4}", eval_result.rmse);
+                                println!("  MAPE: {:.2}%", eval_result.mape);
+                                if let Some(mase) = eval_result.mase {
+                                    println!("  MASE: {:.4}", mase);
+                                }
+                                if let Some(aic) = eval_result.aic {
+                                    println!("  AIC: {:.2}", aic);
+                                }
+                            }
+
+                            // Perform model evaluation if requested
+                            if *evaluate {
+                                match evaluate_forecast_model(ts, &forecast_config) {
+                                    Ok(eval_result) => {
+                                        println!("\n🎯 Cross-Validation Results:");
+                                        println!("  MAE: {:.4}", eval_result.mae);
+                                        println!("  RMSE: {:.4}", eval_result.rmse);
+                                        println!("  MAPE: {:.2}%", eval_result.mape);
+                                        println!("  SMAPE: {:.2}%", eval_result.smape);
+                                        if let Some(mase) = eval_result.mase {
+                                            println!("  MASE: {:.4}", mase);
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("{}", format!("⚠️  Evaluation failed: {}", e).yellow());
+                                    }
+                                }
+                            }
+
+                            // Export forecast values if requested
+                            if *export_forecast {
+                                let forecast_file = output.as_ref()
+                                    .map(|f| f.replace(".csv", "_forecast.csv"))
+                                    .unwrap_or_else(|| "forecast.csv".to_string());
+
+                                let mut file = File::create(&forecast_file)?;
+                                if let (Some(lower), Some(upper)) = (&result.lower_bounds, &result.upper_bounds) {
+                                    writeln!(file, "timestamp,forecast,lower_bound,upper_bound")?;
+                                    for (i, (&forecast, timestamp)) in result.forecasts.iter()
+                                        .zip(result.timestamps.iter()).enumerate() {
+                                        let lower_val = lower.get(i).copied().unwrap_or(forecast);
+                                        let upper_val = upper.get(i).copied().unwrap_or(forecast);
+                                        writeln!(file, "{},{:.6},{:.6},{:.6}",
+                                            timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                            forecast, lower_val, upper_val)?;
+                                    }
+                                } else {
+                                    writeln!(file, "timestamp,forecast")?;
+                                    for (&forecast, timestamp) in result.forecasts.iter()
+                                        .zip(result.timestamps.iter()) {
+                                        writeln!(file, "{},{:.6}",
+                                            timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                            forecast)?;
+                                    }
+                                }
+                                println!("{}", format!("\n💾 Forecast values exported to: {}", forecast_file).green());
+                            }
+
+                            // Export results if requested
+                            if let Some(output_file) = output {
+                                let export_content = match format.as_str() {
+                                    "json" => serde_json::to_string_pretty(&result)?,
+                                    "markdown" | "md" => {
+                                        let mut md = "# Forecast Results\n\n".to_string();
+                                        md.push_str(&format!("## Method: {}\n\n", result.method));
+                                        md.push_str(&format!("- Horizon: {} periods\n", result.forecasts.len()));
+                                        md.push_str(&format!("- Confidence Level: {:.1}%\n\n", result.confidence_level * 100.0));
+
+                                        md.push_str("## Forecasted Values\n\n");
+                                        md.push_str("| Period | Timestamp | Forecast |");
+                                        if result.lower_bounds.is_some() {
+                                            md.push_str(" Lower Bound | Upper Bound |");
+                                        }
+                                        md.push_str("\n|--------|-----------|----------|");
+                                        if result.lower_bounds.is_some() {
+                                            md.push_str("-------------|-------------|");
+                                        }
+                                        md.push_str("\n");
+
+                                        for (i, (&forecast, timestamp)) in result.forecasts.iter()
+                                            .zip(result.timestamps.iter()).enumerate() {
+                                            md.push_str(&format!("| {} | {} | {:.4} |",
+                                                i + 1,
+                                                timestamp.format("%Y-%m-%d %H:%M:%S"),
+                                                forecast));
+                                            if let (Some(lower), Some(upper)) = (&result.lower_bounds, &result.upper_bounds) {
+                                                if let (Some(&lower_val), Some(&upper_val)) = (lower.get(i), upper.get(i)) {
+                                                    md.push_str(&format!(" {:.4} | {:.4} |", lower_val, upper_val));
+                                                }
+                                            }
+                                            md.push_str("\n");
+                                        }
+                                        md
+                                    },
+                                    _ => {
+                                        let mut text = "Forecast Results\n".to_string();
+                                        text.push_str("================\n\n");
+                                        text.push_str(&format!("Method: {}\n", result.method));
+                                        text.push_str(&format!("Horizon: {} periods\n", result.forecasts.len()));
+                                        text.push_str(&format!("Confidence Level: {:.1}%\n\n", result.confidence_level * 100.0));
+
+                                        text.push_str("Forecasted Values:\n");
+                                        for (i, (&forecast, timestamp)) in result.forecasts.iter()
+                                            .zip(result.timestamps.iter()).enumerate() {
+                                            text.push_str(&format!("  Period {}: {:.4} at {}\n",
+                                                i + 1,
+                                                forecast,
+                                                timestamp.format("%Y-%m-%d %H:%M:%S")));
+                                        }
+                                        text
+                                    },
+                                };
+
+                                std::fs::write(output_file, export_content)?;
+                                println!("{}", format!("\n💾 Results exported to: {}", output_file).green());
+                            }
+
+                            println!("{}", "\n✅ Forecasting complete!".green());
+                        }
+                        Err(e) => {
+                            println!("{}", format!("❌ Forecasting failed: {}", e).red());
+                            return Err(anyhow::anyhow!("Forecasting error: {}", e));
                         }
                     }
                 }

@@ -13,6 +13,7 @@ pub mod stats;
 pub mod trend;
 pub mod seasonality;
 pub mod anomaly;
+pub mod forecasting;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -95,6 +96,21 @@ pub use anomaly::{
     // Utilities
     utils::{StatUtils, DataUtils, ThresholdUtils, AnomalyUtils, DistanceUtils}
 };
+pub use forecasting::{
+    // Main forecasting functions
+    forecast_timeseries, forecast_with_intervals, evaluate_forecast_model,
+
+    // Configuration and result types
+    ForecastConfig, ForecastResult, ForecastMethod, ModelEvaluation,
+    EvaluationConfig, EvaluationMetric, FeatureConfig,
+
+    // Method-specific types
+    SeasonalType, ETSComponent, GrowthType, SeasonalityMode, EnsembleCombination,
+    LagConfig, RollingConfig, CalendarConfig, RollingStatistic,
+
+    // Feature engineering
+    features::{EnhancedTimeSeries, create_enhanced_timeseries}
+};
 
 /// Result type used throughout the library
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -116,6 +132,9 @@ pub enum TimeSeriesError {
 
     #[error("Analysis error: {0}")]
     Analysis(String),
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 }
 
 impl TimeSeriesError {
@@ -137,5 +156,9 @@ impl TimeSeriesError {
 
     pub fn analysis(msg: impl Into<String>) -> Self {
         Self::Analysis(msg.into())
+    }
+
+    pub fn invalid_input(msg: impl Into<String>) -> Self {
+        Self::InvalidInput(msg.into())
     }
 }
