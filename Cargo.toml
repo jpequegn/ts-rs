@@ -62,6 +62,17 @@ walkdir = "2.3"
 # Parallel processing
 rayon = "1.7"
 
+# Performance optimizations
+memmap2 = "0.9"
+lz4 = "1.24"
+dashmap = "5.5"
+
+# Database support
+rusqlite = { version = "0.31", features = ["bundled", "chrono"] }
+
+# Progress indicators
+indicatif = "0.17"
+
 # Directory utilities for interactive mode
 dirs = "5.0"
 
@@ -70,6 +81,12 @@ rand = "0.8"
 
 # Data visualization and plotting
 plotly = { version = "0.8", features = ["plotly_ndarray", "kaleido"] }
+
+# Configuration management
+toml = "0.8"
+serde_yaml = "0.9"
+merge = "0.1"
+figment = { version = "0.10", features = ["toml", "yaml", "json", "env"] }
 
 [dev-dependencies]
 # Temporary files for testing
