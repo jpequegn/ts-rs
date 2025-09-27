@@ -620,14 +620,14 @@ pub enum ImportFormat {
 }
 
 /// Plugin command structure
-#[derive(Parser, Clone)]
+#[derive(Parser, Clone, Debug)]
 pub struct PluginCommand {
     #[clap(subcommand)]
     pub action: PluginAction,
 }
 
 /// Plugin management actions
-#[derive(Subcommand, Clone)]
+#[derive(Subcommand, Clone, Debug)]
 pub enum PluginAction {
     /// List installed plugins
     #[clap(about = "List all installed plugins")]
@@ -794,7 +794,7 @@ pub enum PluginAction {
 }
 
 /// Repository management actions
-#[derive(Subcommand, Clone)]
+#[derive(Subcommand, Clone, Debug)]
 pub enum RepositoryAction {
     /// List configured repositories
     #[clap(about = "List all configured plugin repositories")]
@@ -847,7 +847,7 @@ pub enum RepositoryType {
 }
 
 /// Plugin development actions
-#[derive(Subcommand, Clone)]
+#[derive(Subcommand, Clone, Debug)]
 pub enum DevAction {
     /// Create a new plugin template
     #[clap(about = "Create a new plugin template")]
