@@ -62,6 +62,9 @@ walkdir = "2.3"
 # Random number generation for Isolation Forest
 rand = "0.8"
 
+# Data visualization and plotting
+plotly = { version = "0.8", features = ["plotly_ndarray", "kaleido"] }
+
 [dev-dependencies]
 # Temporary files for testing
 tempfile = "3.0"

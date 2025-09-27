@@ -75,15 +75,95 @@ enum Commands {
         output: String,
     },
 
-    /// Visualize time series data as charts
-    Visualize {
+    /// Create interactive and static plots for time series data
+    Plot {
         /// Path to the CSV file containing time series data
         #[clap(short, long)]
         file: String,
 
-        /// Output image file path
-        #[clap(short, long, default_value = "chart.png")]
+        /// Column name(s) to plot (comma-separated for multiple series)
+        #[clap(short, long, default_value = "value")]
+        columns: String,
+
+        /// Timestamp column name
+        #[clap(short, long, default_value = "timestamp")]
+        time_column: String,
+
+        /// Plot type: line, scatter, histogram, box, violin, qq, acf, pacf, density, heatmap, decomposition, seasonal, forecast, anomaly
+        #[clap(short = 't', long, default_value = "line")]
+        plot_type: String,
+
+        /// Output file path (extension determines format: .html, .png, .svg, .pdf, .json)
+        #[clap(short, long, default_value = "plot.html")]
         output: String,
+
+        /// Plot title
+        #[clap(long)]
+        title: Option<String>,
+
+        /// X-axis label
+        #[clap(long)]
+        x_label: Option<String>,
+
+        /// Y-axis label
+        #[clap(long)]
+        y_label: Option<String>,
+
+        /// Theme: default, dark, publication, high_contrast
+        #[clap(long, default_value = "default")]
+        theme: String,
+
+        /// Plot width in pixels
+        #[clap(long, default_value = "800")]
+        width: usize,
+
+        /// Plot height in pixels
+        #[clap(long, default_value = "600")]
+        height: usize,
+
+        /// Export format: html, png, svg, pdf, json, display
+        #[clap(long, default_value = "html")]
+        format: String,
+
+        /// Show legend
+        #[clap(long)]
+        show_legend: bool,
+
+        /// Show grid
+        #[clap(long)]
+        show_grid: bool,
+
+        /// Interactive plot (for HTML format)
+        #[clap(long, default_value = "true")]
+        interactive: bool,
+
+        /// Max lags for ACF/PACF plots
+        #[clap(long, default_value = "50")]
+        max_lags: usize,
+
+        /// Number of bins for histograms
+        #[clap(long, default_value = "30")]
+        bins: usize,
+
+        /// Seasonal period for decomposition/seasonal plots
+        #[clap(long)]
+        seasonal_period: Option<usize>,
+
+        /// Correlation method for heatmaps: pearson, spearman, kendall
+        #[clap(long, default_value = "pearson")]
+        correlation_method: String,
+
+        /// Anomaly indices for anomaly plots (comma-separated)
+        #[clap(long)]
+        anomaly_indices: Option<String>,
+
+        /// Forecast horizon for forecast plots
+        #[clap(long, default_value = "10")]
+        forecast_horizon: usize,
+
+        /// Confidence level for forecast intervals
+        #[clap(long, default_value = "0.95")]
+        confidence_level: f64,
     },
 
     /// Comprehensive statistical analysis for time series data
@@ -1012,13 +1092,197 @@ fn main() -> Result<()> {
             }
         }
 
-        Commands::Visualize { file, output } => {
-            println!("{}", "📈 Creating visualization...".cyan().bold());
+        Commands::Plot {
+            file,
+            columns,
+            time_column,
+            plot_type,
+            output,
+            title,
+            x_label,
+            y_label,
+            theme,
+            width,
+            height,
+            format,
+            show_legend,
+            show_grid,
+            interactive,
+            max_lags,
+            bins,
+            seasonal_period,
+            correlation_method,
+            anomaly_indices,
+            forecast_horizon,
+            confidence_level,
+        } => {
+            println!("{}", "📈 Creating plot...".cyan().bold());
             println!("Input file: {}", file);
+            println!("Plot type: {}", plot_type);
             println!("Output file: {}", output);
 
-            // TODO: Implement visualization logic
-            println!("{}", "✅ Chart created! (placeholder)".green());
+            // Configure import to get the specified columns
+            let mut config = ImportConfig::default();
+            config.csv_config.timestamp_column = TimestampColumn::Name(time_column.clone());
+
+            // Parse column names
+            let column_names: Vec<String> = columns.split(',').map(|s| s.trim().to_string()).collect();
+
+            match import_from_file(file, &config) {
+                Ok(import_result) => {
+                    // Prepare data for plotting
+                    let mut plot_data = std::collections::HashMap::new();
+                    let mut timestamps = Vec::new();
+
+                    // Get timestamps if available
+                    if let Some(ts_data) = import_result.data.get(&time_column.clone()) {
+                        if let Some(ts) = &ts_data.series {
+                            timestamps = ts.timestamps().iter().cloned().collect();
+                        }
+                    }
+
+                    // Extract data for each column
+                    for column_name in &column_names {
+                        if let Some(series_data) = import_result.data.get(column_name) {
+                            if let Some(ts) = &series_data.series {
+                                plot_data.insert(column_name.clone(), ts.values().to_vec());
+                            }
+                        } else {
+                            println!("{}", format!("⚠️ Column '{}' not found in data", column_name).yellow());
+                        }
+                    }
+
+                    if plot_data.is_empty() {
+                        println!("{}", "❌ No valid data columns found for plotting".red());
+                        return Err(anyhow::anyhow!("No valid data columns"));
+                    }
+
+                    // Configure plot
+                    let plot_theme = match theme.as_str() {
+                        "dark" => chronos::plotting::Theme::Dark,
+                        "publication" => chronos::plotting::Theme::Publication,
+                        "high_contrast" => chronos::plotting::Theme::HighContrast,
+                        _ => chronos::plotting::Theme::Default,
+                    };
+
+                    let export_format = match format.as_str() {
+                        "png" => chronos::plotting::ExportFormat::PNG,
+                        "svg" => chronos::plotting::ExportFormat::SVG,
+                        "pdf" => chronos::plotting::ExportFormat::PDF,
+                        "json" => chronos::plotting::ExportFormat::JSON,
+                        "display" => chronos::plotting::ExportFormat::Display,
+                        _ => chronos::plotting::ExportFormat::HTML,
+                    };
+
+                    let plot_config = chronos::plotting::PlotConfig {
+                        plot_type: match plot_type.as_str() {
+                            "scatter" => chronos::plotting::PlotType::Scatter,
+                            "histogram" => chronos::plotting::PlotType::Histogram,
+                            "box" => chronos::plotting::PlotType::BoxPlot,
+                            "violin" => chronos::plotting::PlotType::ViolinPlot,
+                            "qq" => chronos::plotting::PlotType::QQPlot,
+                            "acf" => chronos::plotting::PlotType::ACF,
+                            "pacf" => chronos::plotting::PlotType::PACF,
+                            "density" => chronos::plotting::PlotType::Density,
+                            "heatmap" => chronos::plotting::PlotType::Heatmap,
+                            "decomposition" => chronos::plotting::PlotType::Decomposition,
+                            "seasonal" => chronos::plotting::PlotType::SeasonalPattern,
+                            "forecast" => chronos::plotting::PlotType::Forecast,
+                            "anomaly" => chronos::plotting::PlotType::AnomalyHighlight,
+                            _ => chronos::plotting::PlotType::Line,
+                        },
+                        primary_column: column_names.first().unwrap_or(&"value".to_string()).clone(),
+                        additional_columns: column_names.iter().skip(1).cloned().collect(),
+                        title: title.clone(),
+                        x_label: x_label.clone(),
+                        y_label: y_label.clone(),
+                        theme: plot_theme,
+                        width: *width,
+                        height: *height,
+                        export_format,
+                        interactive: *interactive,
+                        custom_style: None,
+                        show_legend: *show_legend,
+                        show_grid: *show_grid,
+                    };
+
+                    // Create plot
+                    let timestamps_opt = if timestamps.is_empty() { None } else { Some(timestamps.as_slice()) };
+
+                    let plot_result = match plot_type.as_str() {
+                        "histogram" => {
+                            let values = plot_data.values().next().unwrap();
+                            chronos::plotting::create_histogram(values, plot_config)
+                        },
+                        "box" => chronos::plotting::create_box_plot(&plot_data, plot_config),
+                        "violin" => chronos::plotting::create_violin_plot(&plot_data, plot_config),
+                        "qq" => {
+                            let values = plot_data.values().next().unwrap();
+                            chronos::plotting::create_qq_plot(values, plot_config)
+                        },
+                        "acf" => {
+                            let values = plot_data.values().next().unwrap();
+                            chronos::plotting::create_acf_plot(values, *max_lags, plot_config)
+                        },
+                        "pacf" => {
+                            let values = plot_data.values().next().unwrap();
+                            chronos::plotting::create_pacf_plot(values, *max_lags, plot_config)
+                        },
+                        "density" => {
+                            let values = plot_data.values().next().unwrap();
+                            chronos::plotting::create_density_plot(values, plot_config)
+                        },
+                        "heatmap" => chronos::plotting::create_correlation_heatmap(&plot_data, plot_config),
+                        "scatter" => chronos::plotting::create_scatter_plot(&plot_data, timestamps_opt, plot_config),
+                        _ => chronos::plotting::create_line_plot(&plot_data, timestamps_opt, plot_config),
+                    };
+
+                    match plot_result {
+                        Ok(result) => {
+                            // Export to file
+                            let export_options = chronos::plotting::ExportOptions {
+                                output_dir: Some(std::path::Path::new(output).parent().unwrap_or(std::path::Path::new(".")).to_path_buf()),
+                                filename: Some(std::path::Path::new(output).file_stem().unwrap().to_string_lossy().to_string()),
+                                quality: Some(95),
+                                dpi: Some(300),
+                                open_after_export: false,
+                                metadata: None,
+                            };
+
+                            match chronos::plotting::export_to_file(&result, export_format, export_options) {
+                                Ok(export_info) => {
+                                    println!("{}", "✅ Plot created successfully!".green());
+                                    println!("📊 Plot Details:");
+                                    println!("  Type: {:?}", result.metadata.plot_type);
+                                    println!("  Data points: {}", result.metadata.data_points);
+                                    println!("  Series count: {}", result.metadata.series_count);
+                                    println!("  Dimensions: {}x{}", result.metadata.dimensions.0, result.metadata.dimensions.1);
+                                    println!("  Theme: {:?}", result.metadata.theme);
+
+                                    if let Some(file_path) = &export_info.file_path {
+                                        println!("💾 Exported to: {}", file_path);
+                                    }
+                                    if let Some(file_size) = export_info.file_size {
+                                        println!("📦 File size: {} bytes", file_size);
+                                    }
+                                },
+                                Err(e) => {
+                                    println!("{}", format!("❌ Failed to export plot: {}", e).red());
+                                    return Err(anyhow::anyhow!("Export error: {}", e));
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            println!("{}", format!("❌ Failed to create plot: {}", e).red());
+                            return Err(anyhow::anyhow!("Plot creation error: {}", e));
+                        }
+                    }
+                },
+                Err(e) => {
+                    println!("{}", format!("❌ Error importing data: {}", e).red());
+                    return Err(anyhow::anyhow!("Import error: {}", e));
+                }
+            }
         }
 
         Commands::Stats {
