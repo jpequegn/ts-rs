@@ -5,8 +5,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use figment::{Figment, providers::{Format, Toml, Yaml, Json, Env}};
-use merge::Merge;
 
 // The merge crate version 0.1.0 doesn't provide default implementations for primitive types.
 // We need to implement Merge for the specific types used in our configuration structs.

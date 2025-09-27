@@ -321,7 +321,7 @@ impl CompactTimeSeries {
             values.push(value);
         }
 
-        TimeSeries::new(timestamps, values)
+        TimeSeries::new("compressed_series".to_string(), timestamps, values)
     }
 }
 

@@ -5,7 +5,6 @@
 
 use crate::analysis::{Anomaly, AnomalySeverity};
 use crate::TimeSeries;
-use std::collections::VecDeque;
 
 /// Detect anomalies using seasonal decomposition
 pub fn detect_seasonal_anomalies(

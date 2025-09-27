@@ -2,7 +2,7 @@
 
 use crate::{TimeSeries, Result, TimeSeriesError};
 use crate::forecasting::{ForecastResult, ETSComponent, GrowthType, SeasonalityMode};
-use chrono::{DateTime, Utc, Duration};
+use chrono::Duration;
 use std::collections::HashMap;
 use serde_json;
 

@@ -100,7 +100,7 @@ impl ParallelProcessor {
         F: Fn(R, f64) -> R + Send + Sync,
         R: Send + Sync + Clone,
     {
-        let values = ts.values;
+        let values = ts.values.clone();
 
         let result = self.thread_pool.install(|| {
             values.par_iter()
@@ -117,7 +117,7 @@ impl ParallelProcessor {
         F: Fn(&[f64]) -> R + Send + Sync,
         R: Send,
     {
-        let values = ts.values;
+        let values = ts.values.clone();
 
         if values.len() < window_size {
             return Err(TimeSeriesError::invalid_input("Window size larger than data").into());
@@ -267,8 +267,8 @@ pub struct ThreadInfo {
 
 /// Calculate correlation between two time series
 fn calculate_correlation(ts1: &TimeSeries, ts2: &TimeSeries) -> Result<f64> {
-    let values1 = ts1.values;
-    let values2 = ts2.values;
+    let values1 = ts1.values.clone();
+    let values2 = ts2.values.clone();
 
     if values1.len() != values2.len() {
         return Err(TimeSeriesError::invalid_input("Series must have same length").into());
@@ -300,7 +300,7 @@ fn calculate_correlation(ts1: &TimeSeries, ts2: &TimeSeries) -> Result<f64> {
 
 /// Calculate basic statistics for a time series
 fn calculate_statistics(ts: &TimeSeries) -> SeriesStatistics {
-    let values = ts.values;
+    let values = ts.values.clone();
 
     if values.is_empty() {
         return SeriesStatistics {

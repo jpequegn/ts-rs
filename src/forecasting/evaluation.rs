@@ -1,7 +1,7 @@
 //! Model evaluation and validation for forecasting models
 
 use crate::{TimeSeries, Result, TimeSeriesError};
-use crate::forecasting::{ForecastConfig, ForecastResult, ModelEvaluation, EvaluationMetric, forecast_timeseries};
+use crate::forecasting::{ForecastConfig, ModelEvaluation, EvaluationMetric, forecast_timeseries};
 use std::collections::HashMap;
 
 /// Evaluate a forecasting model using various metrics

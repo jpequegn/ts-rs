@@ -5,7 +5,6 @@
 
 use crate::analysis::{Anomaly, AnomalySeverity};
 use crate::TimeSeries;
-use std::f64::consts::PI;
 
 /// Detect anomalies using Z-score method
 pub fn detect_zscore_anomalies(

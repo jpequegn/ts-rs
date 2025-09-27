@@ -122,7 +122,7 @@ pub enum PlotCategory {
 }
 
 /// Data requirements for plots
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DataRequirements {
     /// Minimum number of data points
     pub min_points: usize,
@@ -139,7 +139,7 @@ pub struct DataRequirements {
 }
 
 /// Data types for visualization
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DataType {
     Numeric,
     Temporal,

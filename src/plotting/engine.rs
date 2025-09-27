@@ -4,9 +4,8 @@
 
 use crate::plotting::types::*;
 use plotly::{Plot, Scatter, Histogram, HeatMap, Layout, color::NamedColor};
-use plotly::common::{Mode, Title, Visible, TickMode, Font};
-use plotly::layout::{Axis, GridPattern, RowOrder, LayoutGrid, Annotation, TicksDirection};
-use serde_json::Value as JsonValue;
+use plotly::common::{Mode, Title, Font};
+use plotly::layout::Axis;
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 

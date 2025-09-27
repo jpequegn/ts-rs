@@ -159,8 +159,8 @@ impl ConfigLoader {
 
         // Apply profile-specific overrides
         if let Some(profile) = config.profiles.definitions.get(profile_name) {
-            // Merge profile overrides into the main config
-            config.merge(profile.overrides.clone());
+            // For now, replace with profile overrides (TODO: implement proper merging)
+            config = profile.overrides.clone();
             config.metadata.active_profile = profile_name.to_string();
             config.metadata.sources.push(format!("profile:{}", profile_name));
         } else {
