@@ -65,11 +65,11 @@ impl ParallelProcessor {
     }
 
     /// Process multiple time series in parallel
-    pub fn process_multiple<T, F>(&self, data: Vec<T>, processor: F) -> Result<Vec<T::Output>>
+    pub fn process_multiple<T, R, F>(&self, data: Vec<T>, processor: F) -> Result<Vec<R>>
     where
         T: Send + Sync,
-        T::Output: Send,
-        F: Fn(T) -> Result<T::Output> + Send + Sync,
+        R: Send,
+        F: Fn(T) -> Result<R> + Send + Sync,
     {
         let results: Result<Vec<_>> = self.thread_pool.install(|| {
             data.into_par_iter()
@@ -85,10 +85,8 @@ impl ParallelProcessor {
     where
         F: Fn(f64) -> f64 + Send + Sync,
     {
-        let values = ts.values();
-
         let results: Vec<f64> = self.thread_pool.install(|| {
-            values.par_iter()
+            ts.values.par_iter()
                 .map(|&value| mapper(value))
                 .collect()
         });
@@ -102,7 +100,7 @@ impl ParallelProcessor {
         F: Fn(R, f64) -> R + Send + Sync,
         R: Send + Sync + Clone,
     {
-        let values = ts.values();
+        let values = ts.values;
 
         let result = self.thread_pool.install(|| {
             values.par_iter()
@@ -119,7 +117,7 @@ impl ParallelProcessor {
         F: Fn(&[f64]) -> R + Send + Sync,
         R: Send,
     {
-        let values = ts.values();
+        let values = ts.values;
 
         if values.len() < window_size {
             return Err(TimeSeriesError::invalid_input("Window size larger than data").into());
@@ -269,8 +267,8 @@ pub struct ThreadInfo {
 
 /// Calculate correlation between two time series
 fn calculate_correlation(ts1: &TimeSeries, ts2: &TimeSeries) -> Result<f64> {
-    let values1 = ts1.values();
-    let values2 = ts2.values();
+    let values1 = ts1.values;
+    let values2 = ts2.values;
 
     if values1.len() != values2.len() {
         return Err(TimeSeriesError::invalid_input("Series must have same length").into());
@@ -302,7 +300,7 @@ fn calculate_correlation(ts1: &TimeSeries, ts2: &TimeSeries) -> Result<f64> {
 
 /// Calculate basic statistics for a time series
 fn calculate_statistics(ts: &TimeSeries) -> SeriesStatistics {
-    let values = ts.values();
+    let values = ts.values;
 
     if values.is_empty() {
         return SeriesStatistics {
@@ -344,7 +342,7 @@ mod tests {
             .collect();
         let values: Vec<f64> = (0..size).map(|i| i as f64).collect();
 
-        TimeSeries::new(timestamps, values).unwrap()
+        TimeSeries::new("test".to_string(), timestamps, values).unwrap()
     }
 
     #[test]

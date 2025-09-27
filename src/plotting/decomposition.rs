@@ -201,7 +201,7 @@ fn prepare_forecast_series(
 
     // Prepare forecast data
     let forecast_start_idx = historical_data.len();
-    let forecast_x_values = if let Some(ts) = timestamps {
+    let forecast_x_values: Vec<PlotPoint> = if let Some(ts) = timestamps {
         if ts.len() < total_length {
             return Err("Not enough timestamps for forecast data".into());
         }

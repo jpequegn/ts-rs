@@ -47,8 +47,8 @@ pub fn create_qq_plot(
     let qq_data = calculate_qq_data(values)?;
 
     let mut data = HashMap::new();
-    data.insert("theoretical".to_string(), qq_data.theoretical);
-    data.insert("sample".to_string(), qq_data.sample);
+    data.insert("theoretical".to_string(), qq_data.theoretical.clone());
+    data.insert("sample".to_string(), qq_data.sample.clone());
 
     let mut config = config;
     config.plot_type = PlotType::Scatter;
@@ -78,7 +78,7 @@ pub fn create_acf_plot(
     let acf_data = calculate_acf(values, max_lags)?;
 
     let mut data = HashMap::new();
-    data.insert("ACF".to_string(), acf_data);
+    data.insert("ACF".to_string(), acf_data.clone());
 
     let mut config = config;
     config.plot_type = PlotType::Line;
@@ -108,7 +108,7 @@ pub fn create_pacf_plot(
     let pacf_data = calculate_pacf(values, max_lags)?;
 
     let mut data = HashMap::new();
-    data.insert("PACF".to_string(), pacf_data);
+    data.insert("PACF".to_string(), pacf_data.clone());
 
     let mut config = config;
     config.plot_type = PlotType::Line;
@@ -137,7 +137,7 @@ pub fn create_density_plot(
     let density_data = calculate_density(values)?;
 
     let mut data = HashMap::new();
-    data.insert("Density".to_string(), density_data.densities);
+    data.insert("Density".to_string(), density_data.densities.clone());
 
     let mut config = config;
     config.plot_type = PlotType::Line;

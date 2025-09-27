@@ -192,8 +192,8 @@ impl DatabaseManager {
 
     /// Store time series in database
     pub fn store_timeseries(&self, name: &str, ts: &TimeSeries, description: Option<&str>) -> Result<i64> {
-        let timestamps = ts.timestamps();
-        let values = ts.values();
+        let timestamps = ts.timestamps;
+        let values = ts.values;
 
         if timestamps.is_empty() {
             return Err(TimeSeriesError::invalid_input("Empty time series").into());

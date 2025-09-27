@@ -142,8 +142,3 @@ pub enum PerformanceError {
     ConfigurationError(String),
 }
 
-impl From<PerformanceError> for Box<dyn std::error::Error + Send + Sync> {
-    fn from(err: PerformanceError) -> Self {
-        Box::new(err)
-    }
-}

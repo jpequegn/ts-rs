@@ -212,28 +212,26 @@ pub fn apply_theme(mut layout: Layout, theme: &Theme) -> Layout {
     let config = theme_provider.get_theme_config();
 
     layout = layout
-        .paper_background_color(&config.background)
-        .plot_background_color(&config.background)
-        .font(Font::new().color(&config.text_color).family("Arial, sans-serif").size(12));
+        .paper_background_color(config.background.clone())
+        .plot_background_color(config.background.clone())
+        .font(Font::new().color(config.text_color.clone()).family("Arial, sans-serif").size(12));
 
     // Apply grid styling
     if let Ok(x_axis) = Axis::new()
-        .grid_color(&config.grid_color)
-        .line_color(&config.axis_color)
-        .tick_color(&config.axis_color)
-        .title_font(Font::new().color(&config.text_color))
-        .tick_font(Font::new().color(&config.text_color))
+        .grid_color(config.grid_color.clone())
+        .line_color(config.axis_color.clone())
+        .tick_color(config.axis_color.clone())
+        .tick_font(Font::new().color(config.text_color.clone()))
         .try_into()
     {
         layout = layout.x_axis(x_axis);
     }
 
     if let Ok(y_axis) = Axis::new()
-        .grid_color(&config.grid_color)
-        .line_color(&config.axis_color)
-        .tick_color(&config.axis_color)
-        .title_font(Font::new().color(&config.text_color))
-        .tick_font(Font::new().color(&config.text_color))
+        .grid_color(config.grid_color.clone())
+        .line_color(config.axis_color.clone())
+        .tick_color(config.axis_color.clone())
+        .tick_font(Font::new().color(config.text_color.clone()))
         .try_into()
     {
         layout = layout.y_axis(y_axis);
@@ -245,28 +243,26 @@ pub fn apply_theme(mut layout: Layout, theme: &Theme) -> Layout {
 /// Apply custom theme configuration
 fn apply_custom_theme(mut layout: Layout, theme_config: &ThemeConfig) -> Layout {
     layout = layout
-        .paper_background_color(&theme_config.background)
-        .plot_background_color(&theme_config.background)
-        .font(Font::new().color(&theme_config.text_color).family("Arial, sans-serif").size(12));
+        .paper_background_color(theme_config.background.clone())
+        .plot_background_color(theme_config.background.clone())
+        .font(Font::new().color(theme_config.text_color.clone()).family("Arial, sans-serif").size(12));
 
     // Apply custom grid and axis styling
     if let Ok(x_axis) = Axis::new()
-        .grid_color(&theme_config.grid_color)
-        .line_color(&theme_config.axis_color)
-        .tick_color(&theme_config.axis_color)
-        .title_font(Font::new().color(&theme_config.text_color))
-        .tick_font(Font::new().color(&theme_config.text_color))
+        .grid_color(theme_config.grid_color.clone())
+        .line_color(theme_config.axis_color.clone())
+        .tick_color(theme_config.axis_color.clone())
+        .tick_font(Font::new().color(theme_config.text_color.clone()))
         .try_into()
     {
         layout = layout.x_axis(x_axis);
     }
 
     if let Ok(y_axis) = Axis::new()
-        .grid_color(&theme_config.grid_color)
-        .line_color(&theme_config.axis_color)
-        .tick_color(&theme_config.axis_color)
-        .title_font(Font::new().color(&theme_config.text_color))
-        .tick_font(Font::new().color(&theme_config.text_color))
+        .grid_color(theme_config.grid_color.clone())
+        .line_color(theme_config.axis_color.clone())
+        .tick_color(theme_config.axis_color.clone())
+        .tick_font(Font::new().color(theme_config.text_color.clone()))
         .try_into()
     {
         layout = layout.y_axis(y_axis);
@@ -284,10 +280,10 @@ pub fn customize_styling(
     for (key, value) in custom_style {
         match key.as_str() {
             "background_color" => {
-                layout = layout.paper_background_color(value).plot_background_color(value);
+                layout = layout.paper_background_color(value.clone()).plot_background_color(value.clone());
             }
             "text_color" => {
-                layout = layout.font(Font::new().color(value));
+                layout = layout.font(Font::new().color(value.clone()));
             }
             "font_family" => {
                 layout = layout.font(Font::new().family(value));
@@ -373,7 +369,6 @@ pub fn create_publication_layout(
     // Configure axes with publication styling
     let x_axis = Axis::new()
         .title(plotly::common::Title::new(x_label.unwrap_or("X")))
-        .title_font(Font::new().size(14).color("#000000"))
         .tick_font(Font::new().size(12).color("#000000"))
         .line_color("#000000")
         .tick_color("#000000")
@@ -386,7 +381,6 @@ pub fn create_publication_layout(
 
     let y_axis = Axis::new()
         .title(plotly::common::Title::new(y_label.unwrap_or("Y")))
-        .title_font(Font::new().size(14).color("#000000"))
         .tick_font(Font::new().size(12).color("#000000"))
         .line_color("#000000")
         .tick_color("#000000")

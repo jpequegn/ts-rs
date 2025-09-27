@@ -220,9 +220,9 @@ fn apply_theme_to_layout(mut layout: Layout, theme: &Theme) -> Result<Layout, Bo
                 .font(Font::new().color("#FFFF00"));
         },
         Theme::Custom(theme_config) => {
-            layout = layout.paper_background_color(&theme_config.background)
-                .plot_background_color(&theme_config.background)
-                .font(Font::new().color(&theme_config.text_color));
+            layout = layout.paper_background_color(theme_config.background.clone())
+                .plot_background_color(theme_config.background.clone())
+                .font(Font::new().color(theme_config.text_color.clone()));
         },
     }
 

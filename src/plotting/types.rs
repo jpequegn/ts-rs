@@ -107,6 +107,31 @@ pub enum PlotType {
     Forecast,
 }
 
+impl std::fmt::Display for PlotType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            PlotType::Line => "Line",
+            PlotType::Scatter => "Scatter",
+            PlotType::MultipleSeries => "Multiple Series",
+            PlotType::Subplots => "Subplots",
+            PlotType::Histogram => "Histogram",
+            PlotType::BoxPlot => "Box Plot",
+            PlotType::ViolinPlot => "Violin Plot",
+            PlotType::QQPlot => "Q-Q Plot",
+            PlotType::ACF => "ACF",
+            PlotType::PACF => "PACF",
+            PlotType::Density => "Density",
+            PlotType::Heatmap => "Heatmap",
+            PlotType::ScatterMatrix => "Scatter Matrix",
+            PlotType::Decomposition => "Decomposition",
+            PlotType::SeasonalPattern => "Seasonal Pattern",
+            PlotType::AnomalyHighlight => "Anomaly Highlight",
+            PlotType::Forecast => "Forecast",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 /// Export formats supported
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExportFormat {
