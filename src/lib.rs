@@ -12,6 +12,8 @@ pub mod preprocessing;
 pub mod stats;
 pub mod trend;
 pub mod seasonality;
+pub mod reporting;
+pub mod cli;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -124,3 +126,21 @@ impl TimeSeriesError {
         Self::Analysis(msg.into())
     }
 }
+
+// Re-export reporting module
+pub use reporting::{
+    // Core types
+    ReportConfig, ReportTemplate, ReportExportFormat, ReportSections,
+    ReportMetadata, AdvancedReportConfig, ReportResult, ReportContent,
+    AnalysisData, Insight, InsightCategory, InsightImportance,
+
+    // Main functions
+    generate_comprehensive_report, generate_executive_summary,
+    generate_technical_report, generate_data_quality_report, generate_forecasting_report,
+
+    // Batch processing
+    BatchReportConfig, process_batch_reports, generate_comparison_report,
+
+    // Export functions
+    export_report, export_to_html, export_to_markdown, export_to_pdf, export_to_json,
+};

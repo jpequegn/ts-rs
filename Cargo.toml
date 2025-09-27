@@ -59,6 +59,12 @@ unicode-segmentation = "1.6"
 # Path handling
 walkdir = "2.3"
 
+# Parallel processing
+rayon = "1.7"
+
+# Directory utilities for interactive mode
+dirs = "5.0"
+
 [dev-dependencies]
 # Temporary files for testing
 tempfile = "3.0"

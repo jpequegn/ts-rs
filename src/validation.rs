@@ -191,7 +191,7 @@ pub fn validate_data_quality(timestamps: &[DateTime<Utc>], values: &[f64]) -> Da
 }
 
 /// Report on data quality issues
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DataQualityReport {
     pub nan_count: usize,
     pub infinite_count: usize,
