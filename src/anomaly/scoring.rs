@@ -479,7 +479,7 @@ mod tests {
         for i in 0..3 {
             anomalies.push(Anomaly {
                 index: i,
-                timestamp: base_time + chrono::Duration::minutes(i * 10),
+                timestamp: base_time + chrono::Duration::minutes((i * 10) as i64),
                 value: 100.0,
                 score: 5.0,
                 severity: AnomalySeverity::High,
