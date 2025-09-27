@@ -14,6 +14,7 @@ pub mod trend;
 pub mod seasonality;
 pub mod anomaly;
 pub mod forecasting;
+pub mod correlation;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -110,6 +111,34 @@ pub use forecasting::{
 
     // Feature engineering
     features::{EnhancedTimeSeries, create_enhanced_timeseries}
+};
+pub use correlation::{
+    // Main analysis functions
+    analyze_correlations, AnalysisConfig,
+
+    // Basic correlation types and functions
+    CorrelationType, CorrelationMatrix, compute_correlation_matrix,
+
+    // Rolling correlation analysis
+    RollingCorrelation, compute_rolling_correlation,
+
+    // Cross-correlation analysis
+    CrossCorrelationAnalysis, LeadLagResult,
+
+    // Granger causality testing
+    GrangerCausalityResult, VARModel, test_granger_causality,
+
+    // Cointegration analysis
+    CointegrationResult, test_cointegration,
+
+    // Dynamic Time Warping
+    DTWResult, compute_dtw_distance,
+
+    // Principal Component Analysis
+    PCAResult, compute_pca,
+
+    // Main result type
+    CorrelationAnalysisResult
 };
 
 /// Result type used throughout the library
