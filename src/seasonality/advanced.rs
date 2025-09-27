@@ -1274,7 +1274,7 @@ impl Default for InterpretabilityMeasures {
 
 /// Detect evolving seasonality in time series
 pub fn detect_evolving_seasonality(
-    timestamps: &[DateTime<Utc>],
+    _timestamps: &[DateTime<Utc>],
     values: &[f64],
     config: &SeasonalityAnalysisConfig,
 ) -> Result<EvolvingSeasonality, Box<dyn std::error::Error>> {
@@ -1403,7 +1403,7 @@ pub fn find_seasonal_breaks(
 pub fn analyze_multiple_seasonal_periods(
     values: &[f64],
     detected_periods: &[SeasonalPeriod],
-    config: &SeasonalityAnalysisConfig,
+    _config: &SeasonalityAnalysisConfig,
 ) -> Result<MultipleSeasonalPeriods, Box<dyn std::error::Error>> {
     let mut multiple_periods = MultipleSeasonalPeriods::default();
     multiple_periods.periods = detected_periods.to_vec();

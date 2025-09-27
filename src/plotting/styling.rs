@@ -217,25 +217,23 @@ pub fn apply_theme(mut layout: Layout, theme: &Theme) -> Layout {
         .font(Font::new().color(config.text_color.clone()).family("Arial, sans-serif").size(12));
 
     // Apply grid styling
-    if let Ok(x_axis) = Axis::new()
+    let x_axis = Axis::new()
         .grid_color(config.grid_color.clone())
         .line_color(config.axis_color.clone())
         .tick_color(config.axis_color.clone())
         .tick_font(Font::new().color(config.text_color.clone()))
         .try_into()
-    {
-        layout = layout.x_axis(x_axis);
-    }
+        .expect("Failed to create x-axis");
+    layout = layout.x_axis(x_axis);
 
-    if let Ok(y_axis) = Axis::new()
+    let y_axis = Axis::new()
         .grid_color(config.grid_color.clone())
         .line_color(config.axis_color.clone())
         .tick_color(config.axis_color.clone())
         .tick_font(Font::new().color(config.text_color.clone()))
         .try_into()
-    {
-        layout = layout.y_axis(y_axis);
-    }
+        .expect("Failed to create y-axis");
+    layout = layout.y_axis(y_axis);
 
     layout
 }
@@ -248,25 +246,23 @@ fn apply_custom_theme(mut layout: Layout, theme_config: &ThemeConfig) -> Layout 
         .font(Font::new().color(theme_config.text_color.clone()).family("Arial, sans-serif").size(12));
 
     // Apply custom grid and axis styling
-    if let Ok(x_axis) = Axis::new()
+    let x_axis = Axis::new()
         .grid_color(theme_config.grid_color.clone())
         .line_color(theme_config.axis_color.clone())
         .tick_color(theme_config.axis_color.clone())
         .tick_font(Font::new().color(theme_config.text_color.clone()))
         .try_into()
-    {
-        layout = layout.x_axis(x_axis);
-    }
+        .expect("Failed to create x-axis");
+    layout = layout.x_axis(x_axis);
 
-    if let Ok(y_axis) = Axis::new()
+    let y_axis = Axis::new()
         .grid_color(theme_config.grid_color.clone())
         .line_color(theme_config.axis_color.clone())
         .tick_color(theme_config.axis_color.clone())
         .tick_font(Font::new().color(theme_config.text_color.clone()))
         .try_into()
-    {
-        layout = layout.y_axis(y_axis);
-    }
+        .expect("Failed to create y-axis");
+    layout = layout.y_axis(y_axis);
 
     layout
 }

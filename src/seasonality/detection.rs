@@ -256,7 +256,7 @@ pub fn detect_seasonality(
 /// Analyze Fourier spectrum for frequency components
 pub fn analyze_fourier_spectrum(
     data: &[f64],
-    config: &SeasonalityAnalysisConfig,
+    _config: &SeasonalityAnalysisConfig,
 ) -> Result<FourierAnalysis, Box<dyn std::error::Error>> {
     let n = data.len();
     if n < 4 {
