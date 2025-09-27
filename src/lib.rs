@@ -18,6 +18,8 @@ pub mod anomaly;
 pub mod forecasting;
 pub mod correlation;
 pub mod plotting;
+pub mod config;
+pub mod performance;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -239,4 +241,38 @@ pub use reporting::{
 
     // Export functions
     export_report, export_to_html as report_export_to_html, export_to_markdown, export_to_pdf as report_export_to_pdf, export_to_json,
+};
+
+// Re-export configuration module
+pub use config::{
+    // Core configuration types
+    Config, ConfigMetadata, AnalysisConfig as ConfigAnalysisConfig, VisualizationConfig, OutputConfig, PerformanceConfig,
+    ProfilesConfig, ProfileDefinition, DataCharacteristics, ProfileDetectionRules,
+
+    // Configuration management
+    ConfigLoader, ConfigManager, ConfigFormat, ConfigError, Result as ConfigResult,
+
+    // Validation
+    validation::{ConfigValidator, ValidationResult},
+};
+
+// Re-export performance module
+pub use performance::{
+    // Core performance types
+    PerformanceOptimizer, PerformanceMetrics, MemoryStats, PerformanceError,
+
+    // Memory management
+    memory::{MemoryManager, StreamingProcessor, LazyDataLoader, CompactTimeSeries},
+
+    // Parallel processing
+    parallel::{ParallelProcessor, ParallelConfig, TaskProcessor, SeriesStatistics, ThreadInfo},
+
+    // Caching
+    cache::{CacheManager, CacheConfig, AnalysisCache, CacheStats},
+
+    // Database integration
+    database::{DatabaseManager, DatabaseConfig, TimeSeriesDb, PerformanceRecord},
+
+    // Progress tracking
+    progress::{ProgressTracker, ProgressConfig, ProgressBar, ProgressSpinner, ProgressAware, OperationStatus},
 };
