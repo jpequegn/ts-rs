@@ -168,7 +168,7 @@ pub use plotting::{
     apply_theme, customize_styling,
 
     // Export functionality
-    export_to_file, export_to_html, export_to_png, export_to_svg, export_to_pdf,
+    export_to_file, export_to_html as plot_export_to_html, export_to_png, export_to_svg, export_to_pdf as plot_export_to_pdf,
     ExportOptions
 };
 
@@ -238,5 +238,5 @@ pub use reporting::{
     BatchReportConfig, process_batch_reports, generate_comparison_report,
 
     // Export functions
-    export_report, export_to_html, export_to_markdown, export_to_pdf, export_to_json,
+    export_report, export_to_html as report_export_to_html, export_to_markdown, export_to_pdf as report_export_to_pdf, export_to_json,
 };
