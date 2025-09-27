@@ -192,6 +192,9 @@ pub enum TimeSeriesError {
 
     #[error("Analysis error: {0}")]
     Analysis(String),
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 }
 
 impl TimeSeriesError {
