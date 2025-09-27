@@ -8,12 +8,21 @@ use std::path::PathBuf;
 use figment::{Figment, providers::{Format, Toml, Yaml, Json, Env}};
 use merge::Merge;
 
+// The merge crate version 0.1.0 doesn't provide default implementations for primitive types.
+// We need to implement Merge for the specific types used in our configuration structs.
+// Since we can't implement external traits for external types due to orphan rules,
+// we'll need to use the merge crate's derive macro with custom merge strategies.
+
+// For primitive types and standard library types, we can use the merge crate's
+// built-in support by ensuring our configuration structs use types that implement Merge.
+// The merge crate should handle basic types automatically in newer versions.
+
 pub mod defaults;
 pub mod validation;
 pub mod loader;
 
 /// Main configuration structure containing all settings
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     /// Metadata about the configuration
     pub metadata: ConfigMetadata,
@@ -35,7 +44,7 @@ pub struct Config {
 }
 
 /// Configuration metadata
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigMetadata {
     /// Configuration version for migration support
     pub version: String,
@@ -54,7 +63,7 @@ pub struct ConfigMetadata {
 }
 
 /// Analysis configurations for all analysis types
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisConfig {
     /// Statistical analysis defaults
     pub statistics: StatisticsConfig,
@@ -76,7 +85,7 @@ pub struct AnalysisConfig {
 }
 
 /// Statistical analysis configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatisticsConfig {
     /// Default confidence level for statistical tests
     pub confidence_level: f64,
@@ -98,7 +107,7 @@ pub struct StatisticsConfig {
 }
 
 /// Trend analysis configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrendConfig {
     /// Default decomposition method
     pub default_method: String,
@@ -117,7 +126,7 @@ pub struct TrendConfig {
 }
 
 /// Seasonality analysis configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeasonalityConfig {
     /// Default detection method
     pub default_method: String,
@@ -139,7 +148,7 @@ pub struct SeasonalityConfig {
 }
 
 /// Anomaly detection configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnomalyConfig {
     /// Default detection methods
     pub default_methods: Vec<String>,
@@ -167,7 +176,7 @@ pub struct AnomalyConfig {
 }
 
 /// Forecasting configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastingConfig {
     /// Default forecasting method
     pub default_method: String,
@@ -195,7 +204,7 @@ pub struct ForecastingConfig {
 }
 
 /// ARIMA model configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArimaConfig {
     /// Default AR order
     pub default_p: usize,
@@ -214,7 +223,7 @@ pub struct ArimaConfig {
 }
 
 /// Exponential smoothing configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExponentialSmoothingConfig {
     /// Default alpha parameter
     pub alpha: f64,
@@ -230,7 +239,7 @@ pub struct ExponentialSmoothingConfig {
 }
 
 /// Correlation analysis configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CorrelationConfig {
     /// Default correlation types to compute
     pub default_types: Vec<String>,
@@ -252,7 +261,7 @@ pub struct CorrelationConfig {
 }
 
 /// Visualization and plotting configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VisualizationConfig {
     /// Default plot theme
     pub default_theme: String,
@@ -280,7 +289,7 @@ pub struct VisualizationConfig {
 }
 
 /// Color configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ColorConfig {
     /// Primary color palette
     pub palette: Vec<String>,
@@ -302,7 +311,7 @@ pub struct ColorConfig {
 }
 
 /// Font configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FontConfig {
     /// Default font family
     pub family: String,
@@ -321,7 +330,7 @@ pub struct FontConfig {
 }
 
 /// Output configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputConfig {
     /// Default output format
     pub default_format: String,
@@ -346,7 +355,7 @@ pub struct OutputConfig {
 }
 
 /// Performance and system configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     /// Enable parallel processing
     pub enable_parallel: bool,
@@ -377,7 +386,7 @@ pub struct PerformanceConfig {
 }
 
 /// Profile management configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfilesConfig {
     /// Available profiles
     pub available: Vec<String>,
@@ -393,7 +402,7 @@ pub struct ProfilesConfig {
 }
 
 /// Profile definition
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfileDefinition {
     /// Profile name
     pub name: String,
@@ -409,7 +418,7 @@ pub struct ProfileDefinition {
 }
 
 /// Data characteristics for profile matching
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataCharacteristics {
     /// Typical frequency (daily, hourly, etc.)
     pub frequency: Option<String>,
@@ -428,7 +437,7 @@ pub struct DataCharacteristics {
 }
 
 /// Profile detection rules
-#[derive(Debug, Clone, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfileDetectionRules {
     /// Enable automatic profile detection
     pub enabled: bool,

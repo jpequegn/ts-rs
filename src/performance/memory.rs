@@ -249,8 +249,8 @@ impl CompactTimeSeries {
             return Err(TimeSeriesError::invalid_input("Empty time series").into());
         }
 
-        let timestamps = ts.timestamps();
-        let values = ts.values();
+        let timestamps = ts.timestamps.clone();
+        let values = ts.values.clone();
 
         // Calculate timestamp deltas
         let base_timestamp = timestamps[0].timestamp();

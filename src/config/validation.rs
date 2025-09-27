@@ -149,6 +149,16 @@ pub struct ValidationError {
     pub suggested_fix: Option<String>,
 }
 
+impl std::fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {}", self.path, self.message)?;
+        if let Some(ref fix) = self.suggested_fix {
+            write!(f, " (Suggested: {})", fix)?;
+        }
+        Ok(())
+    }
+}
+
 /// Validation warning details
 #[derive(Debug, Clone)]
 pub struct ValidationWarning {
@@ -165,6 +175,16 @@ pub struct ValidationWarning {
     pub recommendation: Option<String>,
 }
 
+impl std::fmt::Display for ValidationWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {}", self.path, self.message)?;
+        if let Some(ref rec) = self.recommendation {
+            write!(f, " (Recommendation: {})", rec)?;
+        }
+        Ok(())
+    }
+}
+
 /// Validation suggestion
 #[derive(Debug, Clone)]
 pub struct ValidationSuggestion {
@@ -179,6 +199,12 @@ pub struct ValidationSuggestion {
 
     /// Potential benefit
     pub benefit: String,
+}
+
+impl std::fmt::Display for ValidationSuggestion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {} (Benefit: {})", self.path, self.message, self.benefit)
+    }
 }
 
 /// Error categories
