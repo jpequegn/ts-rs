@@ -59,6 +59,9 @@ unicode-segmentation = "1.6"
 # Path handling
 walkdir = "2.3"
 
+# Random number generation for Isolation Forest
+rand = "0.8"
+
 [dev-dependencies]
 # Temporary files for testing
 tempfile = "3.0"
