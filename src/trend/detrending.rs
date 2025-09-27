@@ -323,7 +323,7 @@ pub fn hp_filter_detrend(data: &[f64], lambda: f64) -> Result<DetrendingResult, 
         return Err("HP filter requires at least 4 valid data points".into());
     }
 
-    let n = indexed_data.len();
+    let _n = indexed_data.len();
     let y: Vec<f64> = indexed_data.iter().map(|(_, y)| *y).collect();
 
     // Solve the HP filter equations using simplified approach

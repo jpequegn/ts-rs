@@ -172,7 +172,7 @@ impl StatisticalAnalysisResult {
 
 /// Perform comprehensive statistical analysis on time series data
 pub fn analyze_timeseries(
-    timestamps: &[chrono::DateTime<chrono::Utc>],
+    _timestamps: &[chrono::DateTime<chrono::Utc>],
     values: &[f64],
     column_name: &str,
 ) -> Result<StatisticalAnalysisResult, Box<dyn std::error::Error>> {

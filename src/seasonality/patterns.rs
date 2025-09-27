@@ -1005,7 +1005,7 @@ fn compute_pattern_quality_metrics(
     }
 
     // Estimate seasonal fit
-    let (fitted, residuals) = fit_seasonal_model(data, seasonal_periods)?;
+    let (_fitted, residuals) = fit_seasonal_model(data, seasonal_periods)?;
 
     // Compute R-squared
     let data_mean = data.iter().sum::<f64>() / data.len() as f64;

@@ -1233,7 +1233,7 @@ fn smooth_data(data: &[f64], span: usize) -> Result<Vec<f64>, Box<dyn std::error
 fn smooth_seasonal(
     data: &[f64],
     period: usize,
-    span: usize,
+    _span: usize,
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     // Simple seasonal smoothing
     estimate_additive_seasonal(data, period)

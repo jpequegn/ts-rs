@@ -576,7 +576,7 @@ impl StlDecomposition {
         Ok(result)
     }
 
-    fn calculate_r_squared(&self, original: &[f64], trend: &[f64], seasonal: &[f64], residual: &[f64]) -> f64 {
+    fn calculate_r_squared(&self, original: &[f64], _trend: &[f64], _seasonal: &[f64], residual: &[f64]) -> f64 {
         let mean_original = original.iter().sum::<f64>() / original.len() as f64;
         let total_variance = original.iter()
             .map(|&x| (x - mean_original).powi(2))
