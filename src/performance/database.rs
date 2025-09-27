@@ -2,9 +2,8 @@
 //!
 //! Provides SQLite support and time series database integration for large datasets.
 
-use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-use rusqlite::{Connection, Result as SqliteResult, params, Row};
+use std::path::PathBuf;
+use rusqlite::{Connection, params, OptionalExtension};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use crate::config::PerformanceConfig;
@@ -192,8 +191,8 @@ impl DatabaseManager {
 
     /// Store time series in database
     pub fn store_timeseries(&self, name: &str, ts: &TimeSeries, description: Option<&str>) -> Result<i64> {
-        let timestamps = ts.timestamps;
-        let values = ts.values;
+        let timestamps = ts.timestamps.clone();
+        let values = ts.values.clone();
 
         if timestamps.is_empty() {
             return Err(TimeSeriesError::invalid_input("Empty time series").into());
@@ -269,7 +268,7 @@ impl DatabaseManager {
             values.push(value);
         }
 
-        TimeSeries::new(timestamps, values)
+        TimeSeries::new(name.to_string(), timestamps, values)
     }
 
     /// Query time series data within time range
@@ -304,7 +303,7 @@ impl DatabaseManager {
             values.push(value);
         }
 
-        TimeSeries::new(timestamps, values)
+        TimeSeries::new(name.to_string(), timestamps, values)
     }
 
     /// Get all available time series names
@@ -390,7 +389,7 @@ impl DatabaseManager {
             (
                 "SELECT operation, execution_time_ms, memory_usage_mb, data_size_mb, success, timestamp
                  FROM performance_metrics WHERE operation = ?1 ORDER BY timestamp DESC LIMIT 100".to_string(),
-                vec![op.into()]
+                vec![rusqlite::types::Value::Text(op.to_string())]
             )
         } else {
             (

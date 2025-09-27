@@ -49,7 +49,7 @@ pub struct PluginDependency {
 }
 
 /// Plugin information stored in the registry
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PluginInfo {
     /// Plugin metadata
     pub metadata: PluginMetadata,
@@ -63,6 +63,19 @@ pub struct PluginInfo {
     pub instance: Option<Arc<dyn Plugin>>,
     /// Plugin configuration
     pub config: Option<serde_json::Value>,
+}
+
+impl std::fmt::Debug for PluginInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PluginInfo")
+            .field("metadata", &self.metadata)
+            .field("plugin_type", &self.plugin_type)
+            .field("path", &self.path)
+            .field("status", &self.status)
+            .field("instance", &self.instance.as_ref().map(|_| "Plugin instance"))
+            .field("config", &self.config)
+            .finish()
+    }
 }
 
 /// Plugin load status
@@ -250,7 +263,7 @@ impl PluginRegistry {
     }
 
     /// Register a discovered plugin
-    fn register_discovered_plugin(&self, metadata: PluginMetadata, path: PathBuf) -> PluginResult<()> {
+    pub fn register_discovered_plugin(&self, metadata: PluginMetadata, path: PathBuf) -> PluginResult<()> {
         // Validate API version compatibility
         if !metadata.api_version.is_compatible(&CURRENT_API_VERSION) {
             return Err(PluginError::VersionIncompatible {

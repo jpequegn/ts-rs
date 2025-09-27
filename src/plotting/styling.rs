@@ -5,7 +5,7 @@
 
 use crate::plotting::types::*;
 use plotly::common::{Font, TickMode};
-use plotly::layout::{Axis, GridPattern, Legend, Margin, TicksDirection};
+use plotly::layout::{Axis, Legend, Margin, TicksDirection};
 use plotly::Layout;
 use std::collections::HashMap;
 

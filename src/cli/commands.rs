@@ -10,7 +10,7 @@ use crate::cli::{
     AnomalyCommand, ForecastCommand, CorrelateCommand, PlotCommand, ReportCommand, ConfigCommand,
     OutputFormat, ImportFormat, ConfigAction, ConfigOutputFormat, ConfigFormat
 };
-use crate::config::{ConfigLoader, ConfigManager, ConfigError, ConfigFormat as ConfigLoaderFormat};
+use crate::config::{ConfigLoader, ConfigManager, ConfigFormat as ConfigLoaderFormat};
 
 /// Execute the import command
 pub fn execute_import(cmd: ImportCommand, global_opts: &Cli) -> Result<()> {

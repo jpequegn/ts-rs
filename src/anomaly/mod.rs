@@ -11,9 +11,8 @@ pub mod streaming;
 pub mod scoring;
 pub mod utils;
 
-use crate::analysis::{AnomalyDetection, Anomaly, AnomalySeverity};
+use crate::analysis::{AnomalyDetection, Anomaly};
 use crate::TimeSeries;
-use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 

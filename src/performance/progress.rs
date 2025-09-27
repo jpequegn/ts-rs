@@ -4,7 +4,6 @@
 
 use std::sync::{Arc, Mutex, atomic::{AtomicBool, AtomicU64, Ordering}};
 use std::time::{Duration, Instant};
-use std::thread;
 use indicatif::{ProgressBar as IndicatifBar, ProgressStyle, MultiProgress};
 use crate::config::PerformanceConfig;
 use crate::Result;

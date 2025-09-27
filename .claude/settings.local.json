@@ -13,7 +13,8 @@
       "Read(//c/tmp/**)",
       "Read(///**)",
       "Bash(find:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

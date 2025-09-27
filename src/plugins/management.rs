@@ -4,7 +4,7 @@
 
 use super::{
     PluginError, PluginResult, PluginRegistry, PluginInfo, PluginMetadata,
-    PluginLoader, ApiVersion, CURRENT_API_VERSION
+    PluginLoader
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -278,12 +278,14 @@ impl PluginManager {
 
         let duration = start_time.elapsed();
 
+        let size = self.calculate_directory_size(&install_path).unwrap_or(0);
+
         Ok(InstallResult {
             plugin_id: config.plugin_id.clone(),
             version: metadata.version,
             install_path,
             duration,
-            size: self.calculate_directory_size(&install_path).unwrap_or(0),
+            size,
             warnings: Vec::new(),
         })
     }
