@@ -78,6 +78,7 @@ dirs = "5.0"
 
 # Random number generation for Isolation Forest
 rand = "0.8"
+fastrand = "2.0"
 
 # Data visualization and plotting
 plotly = { version = "0.8", features = ["plotly_ndarray", "kaleido"] }
