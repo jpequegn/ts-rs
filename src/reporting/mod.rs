@@ -38,7 +38,7 @@ pub use batch::{
     process_batch_reports, generate_comparison_report
 };
 
-use crate::{TimeSeries, Result};
+use crate::Result;
 use std::collections::HashMap;
 
 /// Generate a comprehensive report from time series data

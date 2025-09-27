@@ -3,8 +3,8 @@
 //! Functions for processing multiple reports and generating comparison analyses.
 
 use crate::reporting::types::{
-    BatchReportConfig, BatchOptions, ReportResult, ReportConfig, AnalysisData,
-    Insight, InsightCategory, InsightImportance, ReportContent, ReportMetadata
+    BatchReportConfig, ReportResult, ReportConfig, AnalysisData,
+    InsightCategory, ReportContent, ReportMetadata
 };
 use crate::reporting::engine::ReportEngine;
 use crate::Result;

@@ -396,7 +396,7 @@ fn detect_csv_format<P: AsRef<Path>>(path: P, mut config: ImportConfig) -> Resul
 
     let file = File::open(path)?;
     let reader = BufReader::new(file);
-    let mut lines = reader.lines();
+    let lines = reader.lines();
 
     // Read first few lines for detection
     let sample_lines: Vec<String> = lines

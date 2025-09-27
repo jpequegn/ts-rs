@@ -3,7 +3,6 @@
 //! This module provides the main CLI interface for Chronos time series analysis tool.
 
 use clap::{Parser, Subcommand, ValueEnum};
-use anyhow::Result;
 use std::path::PathBuf;
 
 /// Chronos - A powerful CLI tool for comprehensive time series analysis

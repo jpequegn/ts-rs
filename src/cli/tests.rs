@@ -7,8 +7,6 @@ use super::*;
 use super::commands::*;
 use super::interactive::*;
 use anyhow::Result;
-use std::env;
-use std::fs;
 use tempfile::TempDir;
 
 #[cfg(test)]

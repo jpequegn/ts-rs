@@ -2,7 +2,7 @@
 //!
 //! This module contains the actual implementation logic for each CLI command.
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use colored::Colorize;
 use std::path::PathBuf;
 use crate::cli::{

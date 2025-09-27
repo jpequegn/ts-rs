@@ -3,15 +3,12 @@
 //! Core engine for generating comprehensive reports from time series analysis data.
 
 use crate::reporting::types::*;
-use crate::{TimeSeries, Result};
+use crate::Result;
 use crate::stats::analyze_timeseries;
-use crate::trend::analyze_comprehensive as analyze_trend;
-use crate::seasonality::analyze_comprehensive_seasonality;
 use crate::validation::validate_data_quality;
 
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use serde_json;
 
 /// Report generation engine
 pub struct ReportEngine {
