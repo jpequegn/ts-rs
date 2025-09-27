@@ -15,6 +15,7 @@ pub mod seasonality;
 pub mod anomaly;
 pub mod forecasting;
 pub mod correlation;
+pub mod plotting;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -139,6 +140,34 @@ pub use correlation::{
 
     // Main result type
     CorrelationAnalysisResult
+};
+pub use plotting::{
+    // Core plotting types
+    PlotConfig, PlotType, ExportFormat as PlotExportFormat, Theme, PlotResult, PlotData, PlotPoint, PlotSeries,
+
+    // Main plotting functions
+    plot, render_plot,
+
+    // Time series plotting
+    create_line_plot, create_scatter_plot, create_multiple_series_plot, create_subplot_layout,
+
+    // Statistical plotting
+    create_histogram, create_box_plot, create_violin_plot, create_qq_plot,
+    create_acf_plot, create_pacf_plot, create_density_plot,
+
+    // Correlation plotting
+    create_correlation_heatmap, create_scatter_matrix, create_correlation_plot,
+
+    // Decomposition and forecast plotting
+    create_decomposition_plot, create_seasonal_plot, create_trend_plot,
+    create_forecast_plot, create_anomaly_plot,
+
+    // Styling and themes
+    apply_theme, customize_styling,
+
+    // Export functionality
+    export_to_file, export_to_html, export_to_png, export_to_svg, export_to_pdf,
+    ExportOptions
 };
 
 /// Result type used throughout the library
