@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use chronos::cli::{Cli, Commands};
 use chronos::cli::interactive::InteractiveSession;
 use chronos::cli::commands::*;
+use chronos::config::{Config, ConfigLoader};
 
 fn setup_logging(verbose: bool, quiet: bool) {
     // Set up logging based on verbosity flags
@@ -26,12 +27,58 @@ fn setup_output_directory(output_dir: &Option<PathBuf>) -> Result<()> {
     Ok(())
 }
 
+fn load_configuration(config_path: &Option<PathBuf>, verbose: bool) -> Result<Config> {
+    let loader = ConfigLoader::new();
+
+    let config = match config_path {
+        Some(path) => {
+            if verbose {
+                println!("{}", format!("Loading configuration from: {}", path.display()).cyan().dimmed());
+            }
+            loader.load_with_file(path)?
+        }
+        None => {
+            if verbose {
+                println!("{}", "Loading default configuration...".cyan().dimmed());
+            }
+            loader.load()?
+        }
+    };
+
+    if verbose {
+        println!("{}", format!("Configuration loaded successfully. Active profile: {}", config.metadata.active_profile).cyan().dimmed());
+    }
+
+    Ok(config)
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Setup global options
     setup_logging(cli.verbose, cli.quiet);
     setup_output_directory(&cli.output_dir)?;
+
+    // Load configuration (unless it's a config command that might create the config file)
+    let _config = match &cli.command {
+        Some(Commands::Config(_)) => {
+            // For config commands, we might be creating the config file, so loading might fail
+            // This is handled within the config command itself
+            None
+        }
+        _ => {
+            // For other commands, try to load configuration
+            match load_configuration(&cli.config, cli.verbose && !cli.quiet) {
+                Ok(config) => Some(config),
+                Err(e) => {
+                    if cli.verbose && !cli.quiet {
+                        println!("{}", format!("Warning: Could not load configuration: {}. Using defaults.", e).yellow());
+                    }
+                    None
+                }
+            }
+        }
+    };
 
     // Handle interactive mode
     if cli.interactive {
@@ -53,6 +100,7 @@ fn main() -> Result<()> {
         Some(Commands::Correlate(ref args)) => execute_correlate(args.clone(), &cli)?,
         Some(Commands::Plot(ref args)) => execute_plot(args.clone(), &cli)?,
         Some(Commands::Report(ref args)) => execute_report(args.clone(), &cli)?,
+        Some(Commands::Config(ref args)) => execute_config(args.clone(), &cli)?,
         None => {
             // No command provided, show help
             use clap::CommandFactory;

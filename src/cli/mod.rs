@@ -107,6 +107,14 @@ pub enum Commands {
     /// Generate comprehensive analysis reports
     #[clap(about = "Generate detailed reports with insights and recommendations")]
     Report(ReportCommand),
+
+    /// Configuration management
+    #[clap(about = "Manage configuration files, profiles, and settings")]
+    Config(ConfigCommand),
+
+    /// Plugin management
+    #[clap(about = "Manage plugins: install, update, configure, and list plugins")]
+    Plugin(PluginCommand),
 }
 
 /// Import command structure
@@ -457,6 +465,150 @@ pub struct ReportCommand {
     pub output: Option<PathBuf>,
 }
 
+/// Configuration command structure
+#[derive(Parser, Clone)]
+pub struct ConfigCommand {
+    #[clap(subcommand)]
+    pub action: ConfigAction,
+}
+
+/// Configuration management actions
+#[derive(Subcommand, Clone)]
+pub enum ConfigAction {
+    /// Show current configuration
+    #[clap(about = "Display current configuration settings")]
+    Show {
+        /// Configuration section to show (all if not specified)
+        #[clap(short, long)]
+        section: Option<String>,
+
+        /// Show sources of configuration values
+        #[clap(long)]
+        sources: bool,
+
+        /// Output format
+        #[clap(short, long, value_enum, default_value = "text")]
+        format: ConfigOutputFormat,
+    },
+
+    /// Create default configuration file
+    #[clap(about = "Create a default configuration file")]
+    Init {
+        /// Configuration file path (default: ~/.config/chronos/config.toml)
+        #[clap(short, long)]
+        path: Option<PathBuf>,
+
+        /// Configuration format
+        #[clap(short, long, value_enum, default_value = "toml")]
+        format: ConfigFormat,
+
+        /// Overwrite existing configuration file
+        #[clap(long)]
+        force: bool,
+    },
+
+    /// Set configuration value
+    #[clap(about = "Set a configuration value")]
+    Set {
+        /// Configuration key (e.g., analysis.statistics.confidence_level)
+        key: String,
+
+        /// Configuration value
+        value: String,
+
+        /// Configuration file to modify
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+
+        /// Apply to specific profile
+        #[clap(short, long)]
+        profile: Option<String>,
+    },
+
+    /// Get configuration value
+    #[clap(about = "Get a configuration value")]
+    Get {
+        /// Configuration key (e.g., analysis.statistics.confidence_level)
+        key: String,
+
+        /// Configuration file to read from
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+
+        /// Get from specific profile
+        #[clap(short, long)]
+        profile: Option<String>,
+    },
+
+    /// List available profiles
+    #[clap(about = "List available configuration profiles")]
+    Profiles {
+        /// Show detailed profile information
+        #[clap(short, long)]
+        detailed: bool,
+
+        /// Configuration file to read from
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+    },
+
+    /// Switch to a different profile
+    #[clap(about = "Switch to a different configuration profile")]
+    Profile {
+        /// Profile name to activate
+        name: String,
+
+        /// Configuration file to modify
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+    },
+
+    /// Validate configuration
+    #[clap(about = "Validate configuration file and settings")]
+    Validate {
+        /// Configuration file to validate
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+
+        /// Profile to validate
+        #[clap(short, long)]
+        profile: Option<String>,
+
+        /// Show warnings and suggestions
+        #[clap(short, long)]
+        verbose: bool,
+    },
+
+    /// Edit configuration file
+    #[clap(about = "Open configuration file in default editor")]
+    Edit {
+        /// Configuration file to edit
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+
+        /// Editor to use (default: $EDITOR environment variable)
+        #[clap(short, long)]
+        editor: Option<String>,
+    },
+}
+
+/// Configuration output formats
+#[derive(Clone, Debug, ValueEnum)]
+pub enum ConfigOutputFormat {
+    Text,
+    Json,
+    Yaml,
+    Toml,
+}
+
+/// Configuration file formats
+#[derive(Clone, Debug, ValueEnum)]
+pub enum ConfigFormat {
+    Toml,
+    Yaml,
+    Json,
+}
+
 /// Import format options
 #[derive(Clone, Debug, ValueEnum, PartialEq)]
 pub enum ImportFormat {
@@ -465,6 +617,305 @@ pub enum ImportFormat {
     Parquet,
     Excel,
     Tsv,
+}
+
+/// Plugin command structure
+#[derive(Parser, Clone)]
+pub struct PluginCommand {
+    #[clap(subcommand)]
+    pub action: PluginAction,
+}
+
+/// Plugin management actions
+#[derive(Subcommand, Clone)]
+pub enum PluginAction {
+    /// List installed plugins
+    #[clap(about = "List all installed plugins")]
+    List {
+        /// Show detailed plugin information
+        #[clap(short, long)]
+        detailed: bool,
+
+        /// Filter by plugin type
+        #[clap(short, long)]
+        plugin_type: Option<String>,
+
+        /// Output format
+        #[clap(short, long, value_enum, default_value = "text")]
+        format: ConfigOutputFormat,
+    },
+
+    /// Search for available plugins
+    #[clap(about = "Search for plugins in repositories")]
+    Search {
+        /// Search query (plugin name or keyword)
+        query: Option<String>,
+
+        /// Plugin category to search in
+        #[clap(short, long)]
+        category: Option<String>,
+
+        /// Repository to search in
+        #[clap(short, long)]
+        repository: Option<String>,
+
+        /// Output format
+        #[clap(short, long, value_enum, default_value = "text")]
+        format: ConfigOutputFormat,
+    },
+
+    /// Install a plugin
+    #[clap(about = "Install a plugin from repository")]
+    Install {
+        /// Plugin ID to install
+        plugin_id: String,
+
+        /// Specific version to install
+        #[clap(short, long)]
+        version: Option<String>,
+
+        /// Repository to install from
+        #[clap(short, long)]
+        repository: Option<String>,
+
+        /// Force installation (overwrite existing)
+        #[clap(long)]
+        force: bool,
+
+        /// Plugin configuration file
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+    },
+
+    /// Uninstall a plugin
+    #[clap(about = "Uninstall an installed plugin")]
+    Uninstall {
+        /// Plugin ID to uninstall
+        plugin_id: String,
+
+        /// Create backup before uninstalling
+        #[clap(short, long)]
+        backup: bool,
+
+        /// Remove plugin data directory
+        #[clap(long)]
+        remove_data: bool,
+    },
+
+    /// Update plugins
+    #[clap(about = "Update installed plugins")]
+    Update {
+        /// Plugin ID to update (update all if not specified)
+        plugin_id: Option<String>,
+
+        /// Target version to update to
+        #[clap(short, long)]
+        version: Option<String>,
+
+        /// Force update even if versions match
+        #[clap(long)]
+        force: bool,
+
+        /// Check for updates without installing
+        #[clap(long)]
+        check_only: bool,
+    },
+
+    /// Configure a plugin
+    #[clap(about = "Configure plugin settings")]
+    Configure {
+        /// Plugin ID to configure
+        plugin_id: String,
+
+        /// Configuration key to set
+        #[clap(short, long)]
+        key: Option<String>,
+
+        /// Configuration value to set
+        #[clap(short, long)]
+        value: Option<String>,
+
+        /// Configuration file to apply
+        #[clap(short, long)]
+        config_file: Option<PathBuf>,
+
+        /// Show current configuration
+        #[clap(long)]
+        show: bool,
+    },
+
+    /// Show plugin information
+    #[clap(about = "Show detailed information about a plugin")]
+    Info {
+        /// Plugin ID to show information for
+        plugin_id: String,
+
+        /// Show plugin status and health
+        #[clap(long)]
+        status: bool,
+
+        /// Show plugin configuration
+        #[clap(long)]
+        config: bool,
+
+        /// Output format
+        #[clap(short, long, value_enum, default_value = "text")]
+        format: ConfigOutputFormat,
+    },
+
+    /// Manage plugin repositories
+    #[clap(about = "Manage plugin repositories")]
+    Repository {
+        #[clap(subcommand)]
+        action: RepositoryAction,
+    },
+
+    /// Enable or disable plugins
+    #[clap(about = "Enable or disable plugins")]
+    Toggle {
+        /// Plugin ID to toggle
+        plugin_id: String,
+
+        /// Enable the plugin
+        #[clap(long, conflicts_with = "disable")]
+        enable: bool,
+
+        /// Disable the plugin
+        #[clap(long, conflicts_with = "enable")]
+        disable: bool,
+    },
+
+    /// Plugin development tools
+    #[clap(about = "Tools for plugin development")]
+    Dev {
+        #[clap(subcommand)]
+        action: DevAction,
+    },
+}
+
+/// Repository management actions
+#[derive(Subcommand, Clone)]
+pub enum RepositoryAction {
+    /// List configured repositories
+    #[clap(about = "List all configured plugin repositories")]
+    List {
+        /// Show detailed repository information
+        #[clap(short, long)]
+        detailed: bool,
+    },
+
+    /// Add a new repository
+    #[clap(about = "Add a new plugin repository")]
+    Add {
+        /// Repository name
+        name: String,
+
+        /// Repository URL
+        url: String,
+
+        /// Repository type
+        #[clap(short, long, value_enum, default_value = "http")]
+        repo_type: RepositoryType,
+
+        /// Repository priority
+        #[clap(short, long, default_value = "100")]
+        priority: i32,
+    },
+
+    /// Remove a repository
+    #[clap(about = "Remove a plugin repository")]
+    Remove {
+        /// Repository name to remove
+        name: String,
+    },
+
+    /// Update repository information
+    #[clap(about = "Update repository plugin listings")]
+    Update {
+        /// Repository name to update (all if not specified)
+        name: Option<String>,
+    },
+}
+
+/// Repository types for CLI
+#[derive(Clone, Debug, ValueEnum)]
+pub enum RepositoryType {
+    Http,
+    Git,
+    Local,
+    Registry,
+}
+
+/// Plugin development actions
+#[derive(Subcommand, Clone)]
+pub enum DevAction {
+    /// Create a new plugin template
+    #[clap(about = "Create a new plugin template")]
+    New {
+        /// Plugin name
+        name: String,
+
+        /// Plugin type
+        #[clap(short, long, value_enum)]
+        plugin_type: PluginType,
+
+        /// Output directory
+        #[clap(short, long)]
+        output: Option<PathBuf>,
+
+        /// Plugin template to use
+        #[clap(short, long)]
+        template: Option<String>,
+    },
+
+    /// Validate plugin metadata and structure
+    #[clap(about = "Validate plugin metadata and structure")]
+    Validate {
+        /// Plugin directory to validate
+        path: PathBuf,
+    },
+
+    /// Package plugin for distribution
+    #[clap(about = "Package plugin for distribution")]
+    Package {
+        /// Plugin directory to package
+        path: PathBuf,
+
+        /// Output file path
+        #[clap(short, long)]
+        output: Option<PathBuf>,
+
+        /// Package format
+        #[clap(short, long, value_enum, default_value = "zip")]
+        format: PackageFormat,
+    },
+
+    /// Test plugin functionality
+    #[clap(about = "Test plugin functionality")]
+    Test {
+        /// Plugin directory to test
+        path: PathBuf,
+
+        /// Test configuration file
+        #[clap(short, long)]
+        config: Option<PathBuf>,
+    },
+}
+
+/// Plugin types for CLI
+#[derive(Clone, Debug, ValueEnum)]
+pub enum PluginType {
+    DataSource,
+    Analysis,
+    Visualization,
+}
+
+/// Package formats for plugin distribution
+#[derive(Clone, Debug, ValueEnum)]
+pub enum PackageFormat {
+    Zip,
+    Tar,
+    TarGz,
 }
 
 impl OutputFormat {
