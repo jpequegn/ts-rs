@@ -20,6 +20,7 @@ pub mod correlation;
 pub mod plotting;
 pub mod config;
 pub mod performance;
+pub mod plugins;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -275,4 +276,39 @@ pub use performance::{
 
     // Progress tracking
     progress::{ProgressTracker, ProgressConfig, ProgressBar, ProgressSpinner, ProgressAware, OperationStatus},
+};
+
+// Re-export plugin module
+pub use plugins::{
+    // Core plugin types
+    Plugin, PluginError, PluginResult, PluginType, PluginContext, PluginConfig,
+    PluginCapabilities, PluginStatus, ApiVersion,
+
+    // Plugin registry and management
+    PluginRegistry, PluginInfo, PluginMetadata, PluginLoader,
+    PluginManager, PluginInstallConfig, PluginUpdateConfig,
+
+    // Data source plugins
+    data_source::{
+        DataSourcePlugin, DataSourceConfig, DataSourceResult,
+        ConnectionType, ImportConfig as PluginImportConfig, AuthConfig, DataSchema
+    },
+
+    // Analysis plugins
+    analysis::{
+        AnalysisPlugin, AnalysisConfig as PluginAnalysisConfig, AnalysisResult as PluginAnalysisResult,
+        AnalysisMethod, AnalysisCategory, AnalysisCapabilities
+    },
+
+    // Visualization plugins
+    visualization::{
+        VisualizationPlugin, VisualizationConfig as PluginVisualizationConfig, VisualizationResult,
+        PlotType as PluginPlotType, PlotCategory, ExportFormat as VisualizationExportFormat
+    },
+
+    // Management types
+    management::{
+        AvailablePlugin, InstallResult, UpdateResult, UninstallResult,
+        PluginRepository, RepositoryType as PluginRepositoryType
+    },
 };

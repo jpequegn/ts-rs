@@ -12,7 +12,8 @@
       "Bash(git branch:*)",
       "Read(//c/tmp/**)",
       "Read(///**)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
