@@ -226,7 +226,7 @@ fn export_text_report(
             writeln!(file, "\n=== Time Series Analysis ===")?;
 
             writeln!(file, "Autocorrelation Function (first 10 lags):")?;
-            for (i, (&lag, (&acf, &(lower, upper)))) in ts_stats.acf.lags.iter()
+            for (_i, (&lag, (&acf, &(lower, upper)))) in ts_stats.acf.lags.iter()
                 .zip(ts_stats.acf.values.iter().zip(ts_stats.acf.confidence_intervals.iter()))
                 .enumerate().take(10) {
                 writeln!(file, "  Lag {}: {:.precision$} [CI: {:.precision$}, {:.precision$}]",
@@ -234,7 +234,7 @@ fn export_text_report(
             }
 
             writeln!(file, "\nPartial Autocorrelation Function (first 5 lags):")?;
-            for (i, (&lag, (&pacf, &(lower, upper)))) in ts_stats.pacf.lags.iter()
+            for (_i, (&lag, (&pacf, &(lower, upper)))) in ts_stats.pacf.lags.iter()
                 .zip(ts_stats.pacf.values.iter().zip(ts_stats.pacf.confidence_intervals.iter()))
                 .enumerate().take(5) {
                 writeln!(file, "  Lag {}: {:.precision$} [CI: {:.precision$}, {:.precision$}]",

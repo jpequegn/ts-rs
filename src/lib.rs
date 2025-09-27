@@ -12,6 +12,8 @@ pub mod preprocessing;
 pub mod stats;
 pub mod trend;
 pub mod seasonality;
+pub mod reporting;
+pub mod cli;
 pub mod anomaly;
 pub mod forecasting;
 pub mod correlation;
@@ -166,7 +168,7 @@ pub use plotting::{
     apply_theme, customize_styling,
 
     // Export functionality
-    export_to_file, export_to_html, export_to_png, export_to_svg, export_to_pdf,
+    export_to_file, export_to_html as plot_export_to_html, export_to_png, export_to_svg, export_to_pdf as plot_export_to_pdf,
     ExportOptions
 };
 
@@ -220,3 +222,21 @@ impl TimeSeriesError {
         Self::InvalidInput(msg.into())
     }
 }
+
+// Re-export reporting module
+pub use reporting::{
+    // Core types
+    ReportConfig, ReportTemplate, ReportExportFormat, ReportSections,
+    ReportMetadata, AdvancedReportConfig, ReportResult, ReportContent,
+    AnalysisData, Insight, InsightCategory, InsightImportance,
+
+    // Main functions
+    generate_comprehensive_report, generate_executive_summary,
+    generate_technical_report, generate_data_quality_report, generate_forecasting_report,
+
+    // Batch processing
+    BatchReportConfig, process_batch_reports, generate_comparison_report,
+
+    // Export functions
+    export_report, export_to_html as report_export_to_html, export_to_markdown, export_to_pdf as report_export_to_pdf, export_to_json,
+};

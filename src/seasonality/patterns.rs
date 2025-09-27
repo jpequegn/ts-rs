@@ -1083,7 +1083,7 @@ fn analyze_trend_modulation(
 ) -> Result<TrendModulation, Box<dyn std::error::Error>> {
     // Simple analysis of whether trend affects seasonal amplitude or phase
     let mut amplitude_modulation = false;
-    let mut phase_modulation = false;
+    let phase_modulation = false;
     let mut modulation_strength = 0.0;
 
     if !seasonal_periods.is_empty() && trend.len() == detrended.len() {

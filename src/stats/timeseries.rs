@@ -161,7 +161,7 @@ impl TimeSeriesStats {
     }
 
     /// Add cross-correlation analysis
-    pub fn with_cross_correlation(mut self, other_series: &[f64], max_lags: i32) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn with_cross_correlation(self, _other_series: &[f64], _max_lags: i32) -> Result<Self, Box<dyn std::error::Error>> {
         // This should be called on the original data, not on the struct
         // But for the API, we'll accept it here
         Err("Cross-correlation should be computed separately and added".into())

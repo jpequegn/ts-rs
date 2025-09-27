@@ -302,7 +302,7 @@ fn handle_missing_values(
             let mut new_timestamps = Vec::new();
             let mut new_values = Vec::new();
 
-            for (i, (&timestamp, &value)) in timeseries.timestamps
+            for (_i, (&timestamp, &value)) in timeseries.timestamps
                 .iter()
                 .zip(timeseries.values.iter())
                 .enumerate() {

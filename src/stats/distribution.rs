@@ -342,7 +342,7 @@ fn fit_normal_distribution(data: &[f64]) -> Result<DistributionFit, Box<dyn std:
 
     // Calculate AIC (Akaike Information Criterion)
     let k = 2.0; // Number of parameters for normal distribution
-    let n = data.len() as f64;
+    let _n = data.len() as f64;
     let aic = 2.0 * k - 2.0 * log_likelihood;
 
     Ok(DistributionFit {
@@ -429,7 +429,7 @@ fn approximate_normal_inverse(p: f64) -> f64 {
     if p < 0.5 { -t } else { t }
 }
 
-fn approximate_shapiro_wilk_p_value(w: f64, n: usize) -> f64 {
+fn approximate_shapiro_wilk_p_value(w: f64, _n: usize) -> f64 {
     // Very simplified p-value approximation
     // In practice, use lookup tables or more sophisticated approximations
     if w > 0.95 {
