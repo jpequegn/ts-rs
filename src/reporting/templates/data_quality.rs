@@ -3,13 +3,13 @@
 //! Provides focused data quality assessment and recommendations.
 
 use crate::reporting::types::{AnalysisData, Insight, ReportConfig, ReportContent, InsightCategory};
-use crate::reporting::templates::{ReportTemplate, formatting::*};
+use crate::reporting::templates::{ReportTemplateImpl, formatting::*};
 use crate::Result;
 
 /// Data quality assessment template implementation
 pub struct DataQualityTemplate;
 
-impl ReportTemplate for DataQualityTemplate {
+impl ReportTemplateImpl for DataQualityTemplate {
     fn render(
         analysis_data: &AnalysisData,
         insights: &[Insight],

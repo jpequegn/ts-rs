@@ -3,13 +3,13 @@
 //! Provides a high-level executive summary focused on key insights and business impact.
 
 use crate::reporting::types::{AnalysisData, Insight, ReportConfig, ReportContent, ReportExportFormat, InsightImportance};
-use crate::reporting::templates::{ReportTemplate, formatting::*};
+use crate::reporting::templates::{ReportTemplateImpl, formatting::*};
 use crate::Result;
 
 /// Executive summary template implementation
 pub struct ExecutiveTemplate;
 
-impl ReportTemplate for ExecutiveTemplate {
+impl ReportTemplateImpl for ExecutiveTemplate {
     fn render(
         analysis_data: &AnalysisData,
         insights: &[Insight],
