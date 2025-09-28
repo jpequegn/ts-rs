@@ -15,7 +15,10 @@
       "Bash(find:*)",
       "Bash(tree:*)",
       "Bash(cat:*)",
-      "Bash(timeout 60 cargo test --lib)"
+      "Bash(timeout 60 cargo test --lib)",
+      "Bash(RUST_BACKTRACE=1 cargo run --bin chronos)",
+      "Bash(timeout:*)",
+      "Bash(lldb:*)"
     ],
     "deny": [],
     "ask": []
