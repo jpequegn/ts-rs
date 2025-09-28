@@ -266,12 +266,29 @@ impl Default for ProfileDetectionRules {
     }
 }
 
+/// Create a base config without profiles to avoid circular dependency
+fn create_base_config() -> Config {
+    Config {
+        metadata: ConfigMetadata::default(),
+        analysis: AnalysisConfig::default(),
+        visualization: VisualizationConfig::default(),
+        output: OutputConfig::default(),
+        performance: PerformanceConfig::default(),
+        profiles: ProfilesConfig {
+            available: vec![],
+            definitions: HashMap::new(),
+            auto_switch: false,
+            detection_rules: ProfileDetectionRules::default(),
+        },
+    }
+}
+
 /// Create general-purpose profile
 fn create_general_profile() -> ProfileDefinition {
     ProfileDefinition {
         name: "general".to_string(),
         description: "General-purpose configuration suitable for most time series analysis tasks".to_string(),
-        overrides: Config::default(),
+        overrides: create_base_config(),
         data_characteristics: DataCharacteristics {
             frequency: None,
             seasonality_patterns: vec![],
@@ -284,7 +301,7 @@ fn create_general_profile() -> ProfileDefinition {
 
 /// Create finance-specific profile
 fn create_finance_profile() -> ProfileDefinition {
-    let mut overrides = Config::default();
+    let mut overrides = create_base_config();
 
     // Finance-specific analysis settings
     overrides.analysis.anomaly.zscore_threshold = 2.5; // More sensitive to outliers
@@ -329,7 +346,7 @@ fn create_finance_profile() -> ProfileDefinition {
 
 /// Create IoT-specific profile
 fn create_iot_profile() -> ProfileDefinition {
-    let mut overrides = Config::default();
+    let mut overrides = create_base_config();
 
     // IoT-specific analysis settings
     overrides.analysis.anomaly.default_methods = vec![
@@ -373,7 +390,7 @@ fn create_iot_profile() -> ProfileDefinition {
 
 /// Create weather-specific profile
 fn create_weather_profile() -> ProfileDefinition {
-    let mut overrides = Config::default();
+    let mut overrides = create_base_config();
 
     // Weather-specific analysis settings
     overrides.analysis.seasonality.max_period = 365;
@@ -433,7 +450,7 @@ impl Default for ProfileDefinition {
         Self {
             name: "default".to_string(),
             description: "Default profile definition".to_string(),
-            overrides: Config::default(),
+            overrides: create_base_config(),
             data_characteristics: DataCharacteristics::default(),
         }
     }
