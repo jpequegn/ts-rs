@@ -1,8 +1,8 @@
 //! Unit tests for database integration module
 
-use chronos_time_series::performance::database::*;
-use chronos_time_series::config::PerformanceConfig;
-use chronos_time_series::TimeSeries;
+use chronos::performance::database::*;
+use chronos::config::PerformanceConfig;
+use chronos::TimeSeries;
 use chrono::{DateTime, Utc};
 use tempfile::TempDir;
 

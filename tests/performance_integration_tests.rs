@@ -1,8 +1,8 @@
 //! Integration tests for the performance optimization system
 
-use chronos_time_series::*;
-use chronos_time_series::performance::*;
-use chronos_time_series::config::PerformanceConfig;
+use chronos::*;
+use chronos::performance::*;
+use chronos::config::PerformanceConfig;
 use std::time::Duration;
 use tempfile::TempDir;
 use chrono::{DateTime, Utc};

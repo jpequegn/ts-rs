@@ -1,7 +1,7 @@
 //! Unit tests for caching system module
 
-use chronos_time_series::performance::cache::*;
-use chronos_time_series::config::PerformanceConfig;
+use chronos::performance::cache::*;
+use chronos::config::PerformanceConfig;
 use std::collections::HashMap;
 use tempfile::TempDir;
 

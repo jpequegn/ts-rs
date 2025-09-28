@@ -1,7 +1,7 @@
 //! Unit tests for progress tracking module
 
-use chronos_time_series::performance::progress::*;
-use chronos_time_series::config::PerformanceConfig;
+use chronos::performance::progress::*;
+use chronos::config::PerformanceConfig;
 use std::time::Duration;
 use std::thread;
 

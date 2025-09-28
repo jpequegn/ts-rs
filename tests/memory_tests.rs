@@ -1,8 +1,8 @@
 //! Unit tests for memory management module
 
-use chronos_time_series::performance::memory::*;
-use chronos_time_series::config::PerformanceConfig;
-use chronos_time_series::TimeSeries;
+use chronos::performance::memory::*;
+use chronos::config::PerformanceConfig;
+use chronos::TimeSeries;
 use chrono::{DateTime, Utc};
 use std::io::Write;
 use tempfile::NamedTempFile;

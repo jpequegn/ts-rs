@@ -1,8 +1,8 @@
 //! Unit tests for parallel processing module
 
-use chronos_time_series::performance::parallel::*;
-use chronos_time_series::config::PerformanceConfig;
-use chronos_time_series::TimeSeries;
+use chronos::performance::parallel::*;
+use chronos::config::PerformanceConfig;
+use chronos::TimeSeries;
 use chrono::{DateTime, Utc};
 
 fn create_test_config() -> PerformanceConfig {
