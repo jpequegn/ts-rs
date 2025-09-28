@@ -3,13 +3,13 @@
 //! Provides detailed technical analysis with comprehensive statistical information.
 
 use crate::reporting::types::{AnalysisData, Insight, ReportConfig, ReportContent};
-use crate::reporting::templates::{ReportTemplate, formatting::*};
+use crate::reporting::templates::{ReportTemplateImpl, formatting::*};
 use crate::Result;
 
 /// Technical analysis template implementation
 pub struct TechnicalTemplate;
 
-impl ReportTemplate for TechnicalTemplate {
+impl ReportTemplateImpl for TechnicalTemplate {
     fn render(
         analysis_data: &AnalysisData,
         insights: &[Insight],

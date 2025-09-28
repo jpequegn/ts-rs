@@ -10,14 +10,20 @@ pub mod forecasting;
 use crate::reporting::types::{AnalysisData, Insight, ReportConfig, ReportContent};
 use crate::Result;
 
-// Re-export template functions
+// Re-export template structs and functions
+pub use executive::ExecutiveTemplate;
+pub use technical::TechnicalTemplate;
+pub use data_quality::DataQualityTemplate;
+pub use forecasting::ForecastingTemplate;
+
+// Re-export template render functions
 pub use executive::render_template as render_executive_template;
 pub use technical::render_template as render_technical_template;
 pub use data_quality::render_template as render_data_quality_template;
 pub use forecasting::render_template as render_forecasting_template;
 
-/// Trait for report templates
-pub trait ReportTemplate {
+/// Trait for report template implementations
+pub trait ReportTemplateImpl {
     /// Render the template with the given data and configuration
     fn render(
         analysis_data: &AnalysisData,
@@ -32,17 +38,7 @@ pub trait ReportTemplate {
     fn description() -> &'static str;
 }
 
-/// Executive summary template
-pub struct ExecutiveTemplate;
-
-/// Technical analysis template
-pub struct TechnicalTemplate;
-
-/// Data quality assessment template
-pub struct DataQualityTemplate;
-
-/// Forecasting analysis template
-pub struct ForecastingTemplate;
+// Template structs are defined in their respective modules and re-exported above
 
 /// Render a template based on the template type
 pub fn render_template(
@@ -148,7 +144,7 @@ pub mod formatting {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reporting::types::{ReportTemplate, ReportConfig, AnalysisData, DataSummary};
+    use crate::reporting::types::{ReportConfig, AnalysisData, DataSummary};
     use std::collections::HashMap;
 
     fn create_test_analysis_data() -> AnalysisData {

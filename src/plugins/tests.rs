@@ -169,19 +169,19 @@ mod tests {
 
         // Add repository
         manager.add_repository(repo.clone()).unwrap();
-        assert_eq!(manager.repositories.len(), 1);
-        assert_eq!(manager.repositories[0].name, "test-repo");
+        assert_eq!(manager.repository_count(), 1);
+        assert_eq!(manager.get_repository("test-repo").unwrap().name, "test-repo");
 
         // Remove repository
         manager.remove_repository("test-repo").unwrap();
-        assert_eq!(manager.repositories.len(), 0);
+        assert_eq!(manager.repository_count(), 0);
     }
 
     #[test]
     fn test_plugin_loader_creation() {
         let loader = PluginLoader::new();
-        assert_eq!(loader.search_paths.len(), 0);
-        assert!(!loader.config.enable_dynamic_loading);
+        assert_eq!(loader.search_path_count(), 0);
+        assert!(!loader.get_config().enable_dynamic_loading);
     }
 
     #[test]

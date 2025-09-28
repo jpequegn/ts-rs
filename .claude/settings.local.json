@@ -14,7 +14,8 @@
       "Read(///**)",
       "Bash(find:*)",
       "Bash(tree:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(timeout 60 cargo test --lib)"
     ],
     "deny": [],
     "ask": []

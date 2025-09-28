@@ -3,13 +3,13 @@
 //! Provides forecasting analysis with predictions and model evaluation.
 
 use crate::reporting::types::{AnalysisData, Insight, ReportConfig, ReportContent, InsightCategory};
-use crate::reporting::templates::{ReportTemplate, formatting::*};
+use crate::reporting::templates::{ReportTemplateImpl, formatting::*};
 use crate::Result;
 
 /// Forecasting analysis template implementation
 pub struct ForecastingTemplate;
 
-impl ReportTemplate for ForecastingTemplate {
+impl ReportTemplateImpl for ForecastingTemplate {
     fn render(
         analysis_data: &AnalysisData,
         insights: &[Insight],

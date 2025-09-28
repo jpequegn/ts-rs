@@ -501,7 +501,7 @@ mod tests {
             .collect();
         let values: Vec<f64> = (0..100).map(|i| i as f64).collect();
 
-        TimeSeries::new(timestamps, values).unwrap()
+        TimeSeries::new("test".to_string(), timestamps, values).unwrap()
     }
 
     #[test]

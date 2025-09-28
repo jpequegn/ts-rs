@@ -444,7 +444,7 @@ pub struct ComputeRequirements {
 }
 
 /// Computational complexity classes
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ComplexityClass {
     Constant,
     Logarithmic,
