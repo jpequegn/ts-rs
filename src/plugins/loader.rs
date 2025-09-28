@@ -86,6 +86,16 @@ impl PluginLoader {
         self.search_paths.push(path.as_ref().to_path_buf());
     }
 
+    /// Get the number of search paths
+    pub fn search_path_count(&self) -> usize {
+        self.search_paths.len()
+    }
+
+    /// Get the configuration
+    pub fn get_config(&self) -> &LoaderConfig {
+        &self.config
+    }
+
     /// Load a plugin from a given path
     pub fn load_plugin(&self, plugin_path: &Path, metadata: &PluginMetadata) -> PluginResult<Arc<dyn Plugin>> {
         // For now, we'll implement a simple factory-based approach

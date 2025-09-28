@@ -372,7 +372,7 @@ fn format_number(value: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reporting::types::{ReportConfig, ReportTemplate, ReportExportFormat, ReportSections};
+    use crate::reporting::types::{ReportConfig, ReportTemplate, ReportExportFormat, ReportSections, BatchOptions};
     use std::collections::HashMap;
 
     fn create_test_dataset() -> HashMap<String, Vec<f64>> {

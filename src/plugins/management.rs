@@ -431,6 +431,16 @@ impl PluginManager {
         self.registry.list_plugins()
     }
 
+    /// Get the number of repositories
+    pub fn repository_count(&self) -> usize {
+        self.repositories.len()
+    }
+
+    /// Get repository by name
+    pub fn get_repository(&self, name: &str) -> Option<&PluginRepository> {
+        self.repositories.iter().find(|repo| repo.name == name)
+    }
+
     /// Get plugin status
     pub fn get_plugin_status(&self, plugin_id: &str) -> PluginResult<PluginStatusInfo> {
         let plugin_info = self.registry.get_plugin(plugin_id)

@@ -4,7 +4,7 @@
 //! This module provides data that can be consumed by external plotting libraries.
 
 use crate::trend::{DecompositionResult, BreakpointDetection};
-use crate::trend::decomposition::DecompositionMethod;
+use crate::trend::decomposition::{DecompositionMethod, DecompositionQuality};
 use crate::trend::analysis::{ComprehensiveTrendResult, RateOfChangeAnalysis};
 use crate::analysis::TrendDirection;
 use serde::{Serialize, Deserialize};
