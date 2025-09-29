@@ -21,6 +21,7 @@ pub mod plotting;
 pub mod config;
 pub mod performance;
 pub mod plugins;
+pub mod quality;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -311,4 +312,17 @@ pub use plugins::{
         AvailablePlugin, InstallResult, UpdateResult, UninstallResult,
         PluginRepository, RepositoryType as PluginRepositoryType
     },
+};
+
+// Re-export quality module
+pub use quality::{
+    // Core types
+    QualityAssessment, QualityIssue, QualityMetrics, OutlierMethod, TimeRange,
+
+    // Configuration
+    QualityConfig, OutlierDetectionConfig, ConsistencyConfig,
+    TimelinessConfig, RangeConfig,
+
+    // Error handling
+    QualityError, QualityResult,
 };
