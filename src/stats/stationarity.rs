@@ -335,13 +335,16 @@ pub fn phillips_perron_test(
 
 struct AdfRegressionResult {
     t_statistic: f64,
+    #[allow(dead_code)]
     coefficients: Vec<f64>,
+    #[allow(dead_code)]
     std_errors: Vec<f64>,
     residuals: Vec<f64>,
 }
 
 struct PpRegressionResult {
     t_statistic: f64,
+    #[allow(dead_code)]
     phi_coefficient: f64,
     phi_se: f64,
     residuals: Vec<f64>,

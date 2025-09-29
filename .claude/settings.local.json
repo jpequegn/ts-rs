@@ -1,24 +1,19 @@
 {
   "permissions": {
     "allow": [
+      "Bash(gh issue create:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(gh issue edit:*)",
       "Bash(gh issue view:*)",
       "Bash(git checkout:*)",
-      "Bash(cargo:*)",
       "Bash(mkdir:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(gh pr create:*)",
-      "Bash(git branch:*)",
-      "Read(//c/tmp/**)",
-      "Read(///**)",
-      "Bash(find:*)",
-      "Bash(tree:*)",
-      "Bash(cat:*)",
-      "Bash(timeout 60 cargo test --lib)",
-      "Bash(RUST_BACKTRACE=1 cargo run --bin chronos)",
-      "Bash(timeout:*)",
-      "Bash(lldb:*)"
+      "Bash(gh pr create:*)"
     ],
     "deny": [],
     "ask": []

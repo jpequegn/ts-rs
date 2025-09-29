@@ -128,7 +128,6 @@ impl MannKendallTest {
     fn calculate_s(&self, data: &[f64]) -> (f64, f64) {
         let n = data.len();
         let mut s = 0.0;
-        let mut var_s = 0.0;
 
         // Calculate S statistic
         for i in 0..n {
@@ -143,7 +142,7 @@ impl MannKendallTest {
 
         // Calculate variance of S
         let n_f64 = n as f64;
-        var_s = (n_f64 * (n_f64 - 1.0) * (2.0 * n_f64 + 5.0)) / 18.0;
+        let var_s = (n_f64 * (n_f64 - 1.0) * (2.0 * n_f64 + 5.0)) / 18.0;
 
         // Adjust for ties (simplified - assumes no ties for now)
         // In a full implementation, would need to account for tied values
