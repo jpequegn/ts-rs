@@ -630,7 +630,7 @@ fn backtrack_path(
         let local_cost = cost_matrix[i][j];
 
         let mut best_prev = None;
-        let mut best_cost = f64::INFINITY;
+        let mut _best_cost = f64::INFINITY;
 
         // Check possible predecessors based on step pattern
         match step_pattern {
@@ -638,8 +638,8 @@ fn backtrack_path(
                 // Check diagonal
                 if i > 0 && j > 0 {
                     let cost = accumulated_cost[i-1][j-1];
-                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < best_cost {
-                        best_cost = cost;
+                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < _best_cost {
+                        _best_cost = cost;
                         best_prev = Some((i-1, j-1));
                     }
                 }
@@ -647,8 +647,8 @@ fn backtrack_path(
                 // Check vertical
                 if i > 0 {
                     let cost = accumulated_cost[i-1][j];
-                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < best_cost {
-                        best_cost = cost;
+                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < _best_cost {
+                        _best_cost = cost;
                         best_prev = Some((i-1, j));
                     }
                 }
@@ -656,8 +656,8 @@ fn backtrack_path(
                 // Check horizontal
                 if j > 0 {
                     let cost = accumulated_cost[i][j-1];
-                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < best_cost {
-                        best_cost = cost;
+                    if (cost + local_cost - current_cost).abs() < 1e-10 && cost < _best_cost {
+                        _best_cost = cost;
                         best_prev = Some((i, j-1));
                     }
                 }
