@@ -82,6 +82,7 @@
 pub mod types;
 pub mod config;
 pub mod errors;
+pub mod profiling;
 
 // Re-export commonly used types for convenience
 pub use types::{
@@ -94,6 +95,13 @@ pub use config::{
 };
 
 pub use errors::{QualityError, QualityResult};
+
+pub use profiling::{
+    profile_timeseries, analyze_completeness, generate_statistical_profile,
+    analyze_temporal_coverage, DataProfile, CompletenessReport, TemporalCoverage,
+    StatisticalProfile, ProfilingConfig, DataGap, QualityIndicators,
+    ValueRange, TrendIndicators,
+};
 
 #[cfg(test)]
 mod tests {

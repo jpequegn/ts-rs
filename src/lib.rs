@@ -325,4 +325,10 @@ pub use quality::{
 
     // Error handling
     QualityError, QualityResult,
+
+    // Profiling
+    profile_timeseries, analyze_completeness, generate_statistical_profile,
+    analyze_temporal_coverage, DataProfile, CompletenessReport, TemporalCoverage,
+    StatisticalProfile, ProfilingConfig, DataGap, QualityIndicators,
+    ValueRange, TrendIndicators,
 };
