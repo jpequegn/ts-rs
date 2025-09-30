@@ -84,6 +84,7 @@ pub mod config;
 pub mod errors;
 pub mod profiling;
 pub mod outlier_detection;
+pub mod scoring;
 
 // Re-export commonly used types for convenience
 pub use types::{
@@ -110,6 +111,15 @@ pub use outlier_detection::{
     detect_ensemble_outliers,
     OutlierSeverity, OutlierContext, OutlierPoint, OutlierSummary,
     OutlierReport, OutlierConfig,
+};
+
+pub use scoring::{
+    assess_quality, calculate_completeness_score, calculate_consistency_score,
+    calculate_validity_score, calculate_timeliness_score, calculate_accuracy_score,
+    calculate_overall_score, generate_recommendations,
+    DimensionScores, QualityWeights, QualityBenchmarks, Priority,
+    ImputationMethod, QualityRecommendation, QualityProfile,
+    EnhancedQualityAssessment,
 };
 
 #[cfg(test)]

@@ -338,4 +338,12 @@ pub use quality::{
     detect_ensemble_outliers,
     OutlierSeverity, OutlierContext, OutlierPoint, OutlierSummary,
     OutlierReport, OutlierConfig,
+
+    // Quality scoring and assessment
+    assess_quality, calculate_completeness_score, calculate_consistency_score,
+    calculate_validity_score, calculate_timeliness_score, calculate_accuracy_score,
+    calculate_overall_score, generate_recommendations,
+    DimensionScores, QualityWeights, QualityBenchmarks, Priority,
+    ImputationMethod, QualityRecommendation, QualityProfile,
+    EnhancedQualityAssessment,
 };
