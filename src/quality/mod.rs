@@ -1,31 +1,88 @@
 //! Data Quality Module
 //!
-//! This module provides comprehensive data quality assessment and validation
-//! capabilities for time series data. It includes tools for detecting and
-//! handling various data quality issues such as missing values, outliers,
-//! inconsistencies, and timeliness problems.
+//! Comprehensive tools for assessing, monitoring, and improving the quality of time series data.
 //!
 //! # Overview
 //!
-//! The quality module is organized into several key components:
+//! The data quality module provides a complete suite of functionality for managing time series
+//! data quality across five key dimensions:
 //!
-//! - **Types**: Core data structures for quality assessment results and issues
-//! - **Configuration**: Flexible configuration options for quality checks
-//! - **Errors**: Comprehensive error handling for quality operations
+//! - **Completeness** (0-100): Presence of all expected data points
+//! - **Consistency** (0-100): Data follows expected patterns and rules
+//! - **Validity** (0-100): Data values are within expected ranges
+//! - **Timeliness** (0-100): Data arrives at expected frequencies
+//! - **Accuracy** (0-100): Data correctness and statistical soundness
 //!
-//! # Usage
+//! # Features
 //!
-//! ```rust,ignore
-//! use chronos::quality::{QualityConfig, QualityAssessment};
+//! - **Quality Assessment**: Multi-dimensional scoring with automated recommendations
+//! - **Data Profiling**: Comprehensive analysis of data characteristics
+//! - **Outlier Detection**: Multiple detection methods (Z-score, IQR, Modified Z-score, Temporal, Ensemble)
+//! - **Data Cleaning**: Smart imputation, outlier correction, and noise reduction
+//! - **Quality Monitoring**: Continuous tracking with degradation detection and alerting
+//!
+//! # Quick Start
+//!
+//! ## Basic Quality Assessment
+//!
+//! ```rust,no_run
+//! use chronos::quality::*;
 //! use chronos::TimeSeries;
 //!
-//! // Create a quality configuration
-//! let config = QualityConfig::default()
-//!     .with_completeness_threshold(0.95)
-//!     .with_cleaning(false);
+//! # fn main() -> Result<(), QualityError> {
+//! // Load time series data
+//! let data = TimeSeries::from_csv("data.csv")?;
 //!
-//! // Assess quality (future implementation)
-//! // let assessment = assess_quality(&timeseries, &config)?;
+//! // Assess quality with default configuration
+//! let config = QualityConfig::default();
+//! let assessment = assess_quality(&data, &config)?;
+//!
+//! println!("Overall quality: {:.1}/100", assessment.overall_score);
+//! println!("Completeness: {:.1}/100", assessment.dimension_scores.completeness);
+//! println!("Issues found: {}", assessment.quality_issues.len());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Data Cleaning
+//!
+//! ```rust,no_run
+//! use chronos::quality::*;
+//! use chronos::TimeSeries;
+//!
+//! # fn main() -> Result<(), QualityError> {
+//! let data = TimeSeries::from_csv("data.csv")?;
+//!
+//! // Clean data with conservative settings
+//! let config = CleaningConfig::conservative();
+//! let result = clean_timeseries(&data, &config)?;
+//!
+//! println!("Gaps filled: {}", result.cleaning_report.gaps_filled);
+//! println!("Outliers corrected: {}", result.cleaning_report.outliers_corrected);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Quality Monitoring
+//!
+//! ```rust,no_run
+//! use chronos::quality::*;
+//! use chronos::TimeSeries;
+//!
+//! # fn main() -> Result<(), QualityError> {
+//! // Set up continuous monitoring
+//! let config = MonitoringConfig::default();
+//! let mut tracker = QualityTracker::new(config);
+//!
+//! // Track quality over time
+//! let data = TimeSeries::from_csv("data.csv")?;
+//! let assessment = assess_quality(&data, &QualityConfig::default())?;
+//! tracker.track_quality_metrics(&assessment)?;
+//!
+//! // Check for degradation
+//! let trend = tracker.detect_quality_degradation(&QualityThresholds::default());
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Quality Dimensions
