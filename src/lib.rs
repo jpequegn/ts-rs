@@ -331,4 +331,11 @@ pub use quality::{
     analyze_temporal_coverage, DataProfile, CompletenessReport, TemporalCoverage,
     StatisticalProfile, ProfilingConfig, DataGap, QualityIndicators,
     ValueRange, TrendIndicators,
+
+    // Outlier detection
+    detect_outliers, detect_zscore_outliers, detect_iqr_outliers,
+    detect_modified_zscore_outliers, detect_temporal_outliers,
+    detect_ensemble_outliers,
+    OutlierSeverity, OutlierContext, OutlierPoint, OutlierSummary,
+    OutlierReport, OutlierConfig,
 };

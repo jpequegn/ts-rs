@@ -83,6 +83,7 @@ pub mod types;
 pub mod config;
 pub mod errors;
 pub mod profiling;
+pub mod outlier_detection;
 
 // Re-export commonly used types for convenience
 pub use types::{
@@ -101,6 +102,14 @@ pub use profiling::{
     analyze_temporal_coverage, DataProfile, CompletenessReport, TemporalCoverage,
     StatisticalProfile, ProfilingConfig, DataGap, QualityIndicators,
     ValueRange, TrendIndicators,
+};
+
+pub use outlier_detection::{
+    detect_outliers, detect_zscore_outliers, detect_iqr_outliers,
+    detect_modified_zscore_outliers, detect_temporal_outliers,
+    detect_ensemble_outliers,
+    OutlierSeverity, OutlierContext, OutlierPoint, OutlierSummary,
+    OutlierReport, OutlierConfig,
 };
 
 #[cfg(test)]
