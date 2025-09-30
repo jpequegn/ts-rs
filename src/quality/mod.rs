@@ -85,6 +85,7 @@ pub mod errors;
 pub mod profiling;
 pub mod outlier_detection;
 pub mod scoring;
+pub mod cleaning;
 
 // Re-export commonly used types for convenience
 pub use types::{
@@ -120,6 +121,13 @@ pub use scoring::{
     DimensionScores, QualityWeights, QualityBenchmarks, Priority,
     ImputationMethod, QualityRecommendation, QualityProfile,
     EnhancedQualityAssessment,
+};
+
+pub use cleaning::{
+    fill_gaps, correct_outliers, reduce_noise, clean_timeseries,
+    OutlierCorrection, NoiseReduction,
+    ModificationOperation, DataModification, QualityImpact,
+    CleaningReport, CleaningResult, CleaningConfig, GapConfig,
 };
 
 #[cfg(test)]

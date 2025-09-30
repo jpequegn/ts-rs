@@ -346,4 +346,10 @@ pub use quality::{
     DimensionScores, QualityWeights, QualityBenchmarks, Priority,
     ImputationMethod, QualityRecommendation, QualityProfile,
     EnhancedQualityAssessment,
+
+    // Data cleaning and imputation
+    fill_gaps, correct_outliers, reduce_noise, clean_timeseries,
+    OutlierCorrection, NoiseReduction,
+    ModificationOperation, DataModification, QualityImpact,
+    CleaningReport, CleaningResult, CleaningConfig, GapConfig,
 };
