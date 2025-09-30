@@ -105,6 +105,7 @@ fn main() -> Result<()> {
             println!("{}", "🔌 Plugin management feature coming soon...".cyan());
             println!("Plugin command received: {:?}", args);
         },
+        Some(Commands::Quality(ref args)) => execute_quality(args.clone(), &cli)?,
         None => {
             // No command provided, show help
             use clap::CommandFactory;

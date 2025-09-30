@@ -8,7 +8,8 @@ use std::path::PathBuf;
 use crate::cli::{
     Cli, ImportCommand, StatsCommand, TrendCommand, SeasonalCommand,
     AnomalyCommand, ForecastCommand, CorrelateCommand, PlotCommand, ReportCommand, ConfigCommand,
-    OutputFormat, ImportFormat, ConfigAction, ConfigOutputFormat, ConfigFormat
+    OutputFormat, ImportFormat, ConfigAction, ConfigOutputFormat, ConfigFormat,
+    QualityCommand, QualityAction, MonitorAction
 };
 use crate::config::{ConfigLoader, ConfigManager, ConfigFormat as ConfigLoaderFormat};
 
@@ -683,6 +684,302 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
                 println!("{}", "📝 Configuration editing completed".green());
             }
         },
+    }
+
+    Ok(())
+}
+
+/// Execute quality commands
+pub fn execute_quality(cmd: QualityCommand, global_opts: &Cli) -> Result<()> {
+    match cmd.action {
+        QualityAction::Assess { input, profile, detailed, output } => {
+            execute_quality_assess(&input, profile.as_deref(), detailed, output.as_ref(), global_opts)
+        },
+        QualityAction::Profile { input, frequency, output } => {
+            execute_quality_profile(&input, frequency.as_deref(), output.as_ref(), global_opts)
+        },
+        QualityAction::Clean { input, output, config, max_modifications, aggressive } => {
+            execute_quality_clean(&input, &output, config.as_ref(), max_modifications, aggressive, global_opts)
+        },
+        QualityAction::FillGaps { input, output, method } => {
+            execute_quality_fill_gaps(&input, &output, &method, global_opts)
+        },
+        QualityAction::Monitor { action } => {
+            execute_quality_monitor(action, global_opts)
+        },
+        QualityAction::Report { input, template, recommendations, output } => {
+            execute_quality_report(&input, &template, recommendations, output.as_ref(), global_opts)
+        },
+    }
+}
+
+/// Execute quality assess command
+fn execute_quality_assess(
+    input: &PathBuf,
+    profile: Option<&str>,
+    detailed: bool,
+    _output: Option<&PathBuf>,
+    global_opts: &Cli,
+) -> Result<()> {
+    if !global_opts.quiet {
+        println!("{}", "📊 Assessing Data Quality...".cyan().bold());
+        println!("Input: {}", input.display());
+        if let Some(p) = profile {
+            println!("Profile: {}", p);
+        }
+    }
+
+    // TODO: Load time series from file
+    // TODO: Load quality configuration based on profile
+    // TODO: Perform quality assessment
+    // TODO: Format and output results
+
+    if !global_opts.quiet {
+        println!("\n{}", "Quality Assessment Results".bold());
+        println!("============================\n");
+
+        // Placeholder output
+        println!("Overall Quality Score: {}/100", "85.2".green().bold());
+        println!("\nDimension Scores:");
+        println!("  Completeness:  {}/100", "92.5".green());
+        println!("  Consistency:   {}/100", "88.0".green());
+        println!("  Validity:      {}/100", "78.5".yellow());
+        println!("  Timeliness:    {}/100", "85.0".green());
+        println!("  Accuracy:      {}/100", "90.0".green());
+
+        if detailed {
+            println!("\n{}", "⚠️  Quality Issues".yellow().bold());
+            println!("  • 3 outliers detected using Z-score method");
+            println!("  • 2 gaps in temporal coverage");
+            println!("  • 1 consistency issue detected");
+
+            println!("\n{}", "💡 Recommendations".cyan().bold());
+            println!("  • Consider outlier correction for improved validity");
+            println!("  • Fill temporal gaps using linear interpolation");
+            println!("  • Review data collection process for consistency");
+        }
+
+        println!("\n{}", "✅ Quality assessment completed!".green());
+        println!("Note: This is a placeholder implementation");
+    }
+
+    Ok(())
+}
+
+/// Execute quality profile command
+fn execute_quality_profile(
+    input: &PathBuf,
+    frequency: Option<&str>,
+    _output: Option<&PathBuf>,
+    global_opts: &Cli,
+) -> Result<()> {
+    if !global_opts.quiet {
+        println!("{}", "📋 Generating Data Profile...".cyan().bold());
+        println!("Input: {}", input.display());
+        if let Some(f) = frequency {
+            println!("Expected Frequency: {}", f);
+        }
+    }
+
+    // TODO: Load time series
+    // TODO: Generate data profile
+    // TODO: Output profile
+
+    if !global_opts.quiet {
+        println!("\n{}", "Data Profile".bold());
+        println!("============\n");
+
+        println!("{}", "Basic Statistics:".bold());
+        println!("  Data Points: 1,000");
+        println!("  Time Range: 2023-01-01 to 2023-12-31");
+        println!("  Frequency: Daily (detected)");
+
+        println!("\n{}", "Completeness:".bold());
+        println!("  Coverage: 98.5%");
+        println!("  Missing Values: 15");
+        println!("  Gaps: 2 periods");
+
+        println!("\n{}", "Quality Indicators:".bold());
+        println!("  Overall Quality: High");
+        println!("  Outliers: 3 detected");
+        println!("  Consistency: Good");
+
+        println!("\n{}", "✅ Profiling completed!".green());
+        println!("Note: This is a placeholder implementation");
+    }
+
+    Ok(())
+}
+
+/// Execute quality clean command
+fn execute_quality_clean(
+    input: &PathBuf,
+    output: &PathBuf,
+    _config: Option<&PathBuf>,
+    max_modifications: f64,
+    aggressive: bool,
+    global_opts: &Cli,
+) -> Result<()> {
+    if !global_opts.quiet {
+        println!("{}", "🧹 Cleaning Data...".cyan().bold());
+        println!("Input: {}", input.display());
+        println!("Output: {}", output.display());
+        println!("Max Modifications: {:.1}%", max_modifications * 100.0);
+        if aggressive {
+            println!("Strategy: Aggressive");
+        } else {
+            println!("Strategy: Conservative");
+        }
+    }
+
+    // TODO: Load time series
+    // TODO: Assess quality and identify issues
+    // TODO: Perform cleaning
+    // TODO: Save cleaned data
+
+    if !global_opts.quiet {
+        println!("\n{}", "Cleaning Report".bold());
+        println!("===============\n");
+
+        println!("{}", "Operations Performed:".bold());
+        println!("  Gaps Filled: 15 using linear interpolation");
+        println!("  Outliers Corrected: 3 using capping");
+        println!("  Noise Reduced: Applied moving average filter");
+
+        println!("\n{}", "Quality Impact:".bold());
+        println!("  Completeness Gain: +1.5%");
+        println!("  Consistency Change: +2.0%");
+        println!("  Potential Bias: Low");
+
+        println!("\n{}", "✅ Data cleaning completed!".green());
+        println!("Cleaned data saved to: {}", output.display());
+        println!("Note: This is a placeholder implementation");
+    }
+
+    Ok(())
+}
+
+/// Execute fill gaps command
+fn execute_quality_fill_gaps(
+    input: &PathBuf,
+    output: &PathBuf,
+    method: &str,
+    global_opts: &Cli,
+) -> Result<()> {
+    if !global_opts.quiet {
+        println!("{}", "🔧 Filling Data Gaps...".cyan().bold());
+        println!("Input: {}", input.display());
+        println!("Output: {}", output.display());
+        println!("Method: {}", method);
+    }
+
+    // TODO: Load time series
+    // TODO: Fill gaps using specified method
+    // TODO: Save result
+
+    if !global_opts.quiet {
+        println!("\n{}", "Gap Filling Report".bold());
+        println!("==================\n");
+
+        println!("Gaps Filled: 15");
+        println!("Method Used: {}", method);
+        println!("Completeness: 98.5% → 100.0%");
+
+        println!("\n{}", "✅ Gap filling completed!".green());
+        println!("Filled data saved to: {}", output.display());
+        println!("Note: This is a placeholder implementation");
+    }
+
+    Ok(())
+}
+
+/// Execute monitoring commands
+fn execute_quality_monitor(action: MonitorAction, global_opts: &Cli) -> Result<()> {
+    match action {
+        MonitorAction::Setup { input, config: _, thresholds: _ } => {
+            if !global_opts.quiet {
+                println!("{}", "🔍 Setting up Quality Monitoring...".cyan().bold());
+                println!("Input: {}", input.display());
+
+                println!("\n{}", "Monitoring Configuration".bold());
+                println!("=======================\n");
+
+                println!("Tracking Frequency: Hourly");
+                println!("Alert Thresholds:");
+                println!("  Overall Quality: Warning < 75, Critical < 60");
+                println!("  Completeness: Warning < 90, Critical < 80");
+
+                println!("\n{}", "✅ Monitoring setup completed!".green());
+                println!("Note: This is a placeholder implementation");
+            }
+        },
+        MonitorAction::Status { detailed } => {
+            if !global_opts.quiet {
+                println!("{}", "📈 Quality Monitoring Status".cyan().bold());
+                println!("\nCurrent Status: {}", "Active".green().bold());
+                println!("Last Update: 2 minutes ago");
+                println!("Quality Trend: {}", "Stable".green());
+
+                if detailed {
+                    println!("\n{}", "Detailed Metrics:".bold());
+                    println!("  Overall Quality: 85.2 (↑ 0.5)");
+                    println!("  Completeness: 92.5 (→ 0.0)");
+                    println!("  Consistency: 88.0 (↑ 1.2)");
+                    println!("  Active Alerts: 0");
+                }
+
+                println!("\nNote: This is a placeholder implementation");
+            }
+        },
+        MonitorAction::Alerts { active_only, severity } => {
+            if !global_opts.quiet {
+                println!("{}", "🚨 Quality Alerts".cyan().bold());
+                if active_only {
+                    println!("Showing: Active alerts only");
+                }
+                if let Some(sev) = severity {
+                    println!("Severity Filter: {}", sev);
+                }
+
+                println!("\nNo active alerts");
+                println!("Note: This is a placeholder implementation");
+            }
+        },
+    }
+
+    Ok(())
+}
+
+/// Execute quality report command
+fn execute_quality_report(
+    input: &PathBuf,
+    template: &str,
+    recommendations: bool,
+    _output: Option<&PathBuf>,
+    global_opts: &Cli,
+) -> Result<()> {
+    if !global_opts.quiet {
+        println!("{}", "📄 Generating Quality Report...".cyan().bold());
+        println!("Input: {}", input.display());
+        println!("Template: {}", template);
+
+        println!("\n{}", "Quality Report".bold());
+        println!("==============\n");
+
+        println!("{}", "Executive Summary:".bold());
+        println!("Overall data quality is good with an 85.2% quality score.");
+        println!("Key strengths: High completeness and accuracy.");
+        println!("Areas for improvement: Validity could be enhanced.");
+
+        if recommendations {
+            println!("\n{}", "Recommendations:".bold());
+            println!("1. High Priority: Address 3 detected outliers");
+            println!("2. Medium Priority: Fill 2 temporal gaps");
+            println!("3. Low Priority: Review data collection process");
+        }
+
+        println!("\n{}", "✅ Report generation completed!".green());
+        println!("Note: This is a placeholder implementation");
     }
 
     Ok(())
