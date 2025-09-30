@@ -86,6 +86,7 @@ pub mod profiling;
 pub mod outlier_detection;
 pub mod scoring;
 pub mod cleaning;
+pub mod monitoring;
 
 // Re-export commonly used types for convenience
 pub use types::{
@@ -128,6 +129,13 @@ pub use cleaning::{
     OutlierCorrection, NoiseReduction,
     ModificationOperation, DataModification, QualityImpact,
     CleaningReport, CleaningResult, CleaningConfig, GapConfig,
+};
+
+pub use monitoring::{
+    monitor_quality_over_time, detect_quality_degradation, track_quality_metrics,
+    QualityTracker, QualityTrend, QualityAlert, QualityDataPoint, QualityTimeSeries,
+    TrendDirection, AlertType, AlertSeverity, MonitoringConfig, QualityThresholds,
+    QualityThresholdConfig, QualityBaseline, NotificationChannel,
 };
 
 #[cfg(test)]
