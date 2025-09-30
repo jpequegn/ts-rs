@@ -352,4 +352,10 @@ pub use quality::{
     OutlierCorrection, NoiseReduction,
     ModificationOperation, DataModification, QualityImpact,
     CleaningReport, CleaningResult, CleaningConfig, GapConfig,
+
+    // Quality monitoring and tracking
+    monitor_quality_over_time, detect_quality_degradation, track_quality_metrics,
+    QualityTracker, QualityTrend, QualityAlert, QualityDataPoint, QualityTimeSeries,
+    TrendDirection, AlertType, AlertSeverity, MonitoringConfig, QualityThresholds,
+    QualityThresholdConfig, QualityBaseline, NotificationChannel,
 };
