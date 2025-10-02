@@ -379,6 +379,14 @@ pub use ml::{
     persistence::{ModelFormat, SerializedModel, save_model, load_model,
         ModelVersion, ModelCheckpoint, save_checkpoint, load_checkpoint},
 
+    // Recurrent networks (LSTM/GRU)
+    recurrent::{
+        LSTMConfig, LSTMForecaster, create_lstm_forecaster, forecast_with_lstm,
+        GRUConfig, GRUForecaster, create_gru_forecaster, forecast_with_gru,
+        TimeSeriesDataset, DataSplit, RecurrentFeatureConfig,
+        NormalizationParams, NormalizationMethod, TrainingStats,
+    },
+
     // Error handling
     MLError, MLResult,
 };
