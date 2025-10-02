@@ -10,6 +10,8 @@ A powerful and efficient CLI tool for time series data analysis, visualization, 
 - **CLI-First Approach**: Intuitive command-line interface for automated workflows
 - **Multiple Data Formats**: Support for CSV, JSON, and other common data formats
 - **Precision Calculations**: Decimal-precise computations for financial and scientific data
+- **Machine Learning Models**: Neural network forecasting with LSTM, GRU, and Transformer architectures
+- **GPU Acceleration**: CUDA and Metal support for high-performance ML training
 
 ## Installation
 
@@ -61,24 +63,28 @@ chronos stats --file data.csv
 - Portfolio performance tracking
 - Risk assessment and volatility analysis
 - Market correlation studies
+- Neural network-based price forecasting
 
 ### IoT and Sensor Data
 - Environmental monitoring
 - Equipment performance analysis
 - Anomaly detection in sensor readings
 - Predictive maintenance scheduling
+- ML-powered sensor value prediction
 
 ### Business Intelligence
 - Sales performance tracking
 - Customer behavior analysis
 - Operational metrics monitoring
 - Seasonal trend identification
+- Deep learning demand forecasting
 
 ### Scientific Research
 - Experimental data analysis
 - Climate and weather pattern analysis
 - Laboratory measurement processing
 - Research data visualization
+- Transformer-based sequence modeling
 
 ## Project Structure
 
@@ -107,6 +113,8 @@ chronos/
 - **tabled**: Table formatting for terminal output
 - **colored**: Terminal color output
 - **anyhow**: Error handling
+- **candle-core**: Neural network tensor operations
+- **candle-nn**: Deep learning layers and modules
 
 ## Contributing
 
