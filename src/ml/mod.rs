@@ -10,6 +10,7 @@ pub mod types;
 pub mod tensor;
 pub mod activations;
 pub mod persistence;
+pub mod transformer;
 
 // Re-export commonly used types
 pub use types::{
@@ -30,6 +31,15 @@ pub use activations::{
 pub use persistence::{
     ModelFormat, SerializedModel, save_model, load_model,
     ModelVersion, ModelCheckpoint,
+};
+
+pub use transformer::{
+    // Transformer types
+    TransformerConfig, TransformerForecaster, create_transformer_forecaster, forecast_with_transformer,
+
+    // Attention and encoding
+    PositionalEncoding, PositionalEncodingType, MultiHeadAttention,
+    TransformerEncoder, TransformerEncoderLayer, AttentionAnalysis,
 };
 
 /// Result type for ML operations

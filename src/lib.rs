@@ -379,6 +379,13 @@ pub use ml::{
     persistence::{ModelFormat, SerializedModel, save_model, load_model,
         ModelVersion, ModelCheckpoint, save_checkpoint, load_checkpoint},
 
+    // Transformer architecture
+    transformer::{
+        TransformerConfig, TransformerForecaster, create_transformer_forecaster, forecast_with_transformer,
+        PositionalEncoding, PositionalEncodingType, MultiHeadAttention,
+        TransformerEncoder, TransformerEncoderLayer, AttentionAnalysis,
+    },
+
     // Error handling
     MLError, MLResult,
 };
