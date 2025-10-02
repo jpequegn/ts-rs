@@ -387,6 +387,13 @@ pub use ml::{
         NormalizationParams, NormalizationMethod, TrainingStats,
     },
 
+    // Transformer architecture
+    transformer::{
+        TransformerConfig, TransformerForecaster, create_transformer_forecaster, forecast_with_transformer,
+        PositionalEncoding, PositionalEncodingType, MultiHeadAttention,
+        TransformerEncoder, TransformerEncoderLayer, AttentionAnalysis,
+    },
+
     // Error handling
     MLError, MLResult,
 };
