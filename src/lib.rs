@@ -22,6 +22,7 @@ pub mod config;
 pub mod performance;
 pub mod plugins;
 pub mod quality;
+pub mod ml;
 
 // Re-export commonly used types
 pub use types::{Frequency, MissingValuePolicy};
@@ -358,4 +359,26 @@ pub use quality::{
     QualityTracker, QualityTrend, QualityAlert, QualityDataPoint, QualityTimeSeries,
     TrendDirection, AlertType, AlertSeverity, MonitoringConfig, QualityThresholds,
     QualityThresholdConfig, QualityBaseline, NotificationChannel,
+};
+
+// Re-export ML module
+pub use ml::{
+    // Core types
+    types::{NeuralNetwork, Layer, TrainingConfig, Device, DevicePreference,
+        OptimizerType, LossFunction, ActivationType, EarlyStoppingConfig,
+        ModelMetadata, TrainingHistory, EpochMetrics},
+
+    // Tensor operations
+    tensor::{Tensor, TensorOps, Shape, DataType, GpuBackend},
+
+    // Activation functions
+    activations::{ActivationFunction, apply_activation,
+        relu, sigmoid, tanh, softmax, swish, gelu, leaky_relu, elu},
+
+    // Persistence
+    persistence::{ModelFormat, SerializedModel, save_model, load_model,
+        ModelVersion, ModelCheckpoint, save_checkpoint, load_checkpoint},
+
+    // Error handling
+    MLError, MLResult,
 };
