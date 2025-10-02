@@ -19,6 +19,11 @@ path = "src/main.rs"
 name = "chronos"
 path = "src/lib.rs"
 
+[features]
+default = []
+ml = ["tch"]
+ml-full = ["ml"]
+
 [dependencies]
 # CLI argument parsing
 clap = { version = "3.2", features = ["derive"] }
@@ -91,6 +96,11 @@ figment = { version = "0.10", features = ["toml", "yaml", "json", "env"] }
 
 # Binary serialization
 bincode = "1.3"
+
+# Machine Learning dependencies
+candle-core = "0.9"
+candle-nn = "0.9"
+tch = { version = "0.20", optional = true }
 
 [dev-dependencies]
 # Temporary files for testing
