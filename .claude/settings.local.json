@@ -15,7 +15,9 @@
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(cat:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(git stash:*)",
+      "Bash(cargo run:*)"
     ],
     "deny": [],
     "ask": []

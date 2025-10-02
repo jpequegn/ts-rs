@@ -115,6 +115,10 @@ pub enum Commands {
     /// Plugin management
     #[clap(about = "Manage plugins: install, update, configure, and list plugins")]
     Plugin(PluginCommand),
+
+    /// Data quality assessment and management
+    #[clap(about = "Assess, clean, and monitor data quality")]
+    Quality(QualityCommand),
 }
 
 /// Import command structure
@@ -916,6 +920,157 @@ pub enum PackageFormat {
     Zip,
     Tar,
     TarGz,
+}
+
+/// Quality command structure
+#[derive(Parser, Clone)]
+pub struct QualityCommand {
+    #[clap(subcommand)]
+    pub action: QualityAction,
+}
+
+/// Quality subcommands
+#[derive(Subcommand, Clone)]
+pub enum QualityAction {
+    /// Assess data quality and generate quality score
+    #[clap(about = "Perform comprehensive quality assessment")]
+    Assess {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Quality profile to use (exploratory, production, regulatory, realtime)
+        #[clap(long)]
+        profile: Option<String>,
+
+        /// Include detailed quality report
+        #[clap(long)]
+        detailed: bool,
+
+        /// Output file for quality report
+        #[clap(long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Profile data characteristics and completeness
+    #[clap(about = "Generate comprehensive data profile")]
+    Profile {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Expected data frequency (auto-detect if not specified)
+        #[clap(long)]
+        frequency: Option<String>,
+
+        /// Output profiling report path
+        #[clap(long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Clean data and fix quality issues
+    #[clap(about = "Clean data and repair quality issues")]
+    Clean {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Output file path for cleaned data
+        #[clap(value_name = "OUTPUT")]
+        output: PathBuf,
+
+        /// Cleaning configuration file
+        #[clap(long)]
+        config: Option<PathBuf>,
+
+        /// Maximum percentage of data to modify (0.0-1.0)
+        #[clap(long, default_value = "0.1")]
+        max_modifications: f64,
+
+        /// Use aggressive cleaning strategy
+        #[clap(long)]
+        aggressive: bool,
+    },
+
+    /// Fill gaps in time series data
+    #[clap(about = "Fill missing data gaps using various methods")]
+    FillGaps {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Output file path
+        #[clap(value_name = "OUTPUT")]
+        output: PathBuf,
+
+        /// Imputation method (forward, backward, linear, mean, median, exp)
+        #[clap(long, default_value = "linear")]
+        method: String,
+    },
+
+    /// Set up and manage quality monitoring
+    #[clap(about = "Monitor quality over time")]
+    Monitor {
+        #[clap(subcommand)]
+        action: MonitorAction,
+    },
+
+    /// Generate quality report
+    #[clap(about = "Generate comprehensive quality report")]
+    Report {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Report template (executive, technical, data-quality)
+        #[clap(long, default_value = "technical")]
+        template: String,
+
+        /// Include recommendations
+        #[clap(long)]
+        recommendations: bool,
+
+        /// Output report file
+        #[clap(long)]
+        output: Option<PathBuf>,
+    },
+}
+
+/// Monitor subcommands
+#[derive(Subcommand, Clone)]
+pub enum MonitorAction {
+    /// Set up quality monitoring for a dataset
+    Setup {
+        /// Input file path
+        #[clap(value_name = "FILE")]
+        input: PathBuf,
+
+        /// Monitoring configuration file
+        #[clap(long)]
+        config: Option<PathBuf>,
+
+        /// Alert threshold configuration file
+        #[clap(long)]
+        thresholds: Option<PathBuf>,
+    },
+
+    /// Check monitoring status
+    Status {
+        /// Show detailed status information
+        #[clap(long)]
+        detailed: bool,
+    },
+
+    /// View quality alerts
+    Alerts {
+        /// Show only active alerts
+        #[clap(long)]
+        active_only: bool,
+
+        /// Filter by severity (info, warning, critical, emergency)
+        #[clap(long)]
+        severity: Option<String>,
+    },
 }
 
 impl OutputFormat {
