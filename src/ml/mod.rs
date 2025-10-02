@@ -10,6 +10,7 @@ pub mod types;
 pub mod tensor;
 pub mod activations;
 pub mod persistence;
+pub mod recurrent;
 
 // Re-export commonly used types
 pub use types::{
@@ -30,6 +31,18 @@ pub use activations::{
 pub use persistence::{
     ModelFormat, SerializedModel, save_model, load_model,
     ModelVersion, ModelCheckpoint,
+};
+
+pub use recurrent::{
+    // LSTM types
+    LSTMConfig, LSTMForecaster, create_lstm_forecaster, forecast_with_lstm,
+
+    // GRU types
+    GRUConfig, GRUForecaster, create_gru_forecaster, forecast_with_gru,
+
+    // Dataset and utilities
+    TimeSeriesDataset, DataSplit, RecurrentFeatureConfig,
+    NormalizationParams, NormalizationMethod, TrainingStats,
 };
 
 /// Result type for ML operations
