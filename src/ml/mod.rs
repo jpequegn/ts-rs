@@ -13,6 +13,7 @@ pub mod persistence;
 pub mod recurrent;
 pub mod transformer;
 pub mod ensemble;
+pub mod automl;
 
 // Re-export commonly used types
 pub use types::{
@@ -82,6 +83,36 @@ pub use ensemble::{
 
     // Core functions
     create_ensemble_forecaster, optimize_ensemble_weights,
+};
+
+pub use automl::{
+    // Core types
+    AutoMLConfig, OptimizationBudget, ComputeResources, SearchSpace,
+    ParameterConfiguration, ParameterValue, OptimizedModel,
+    PerformanceMetrics, OptimizationHistory,
+
+    // Optimization methods
+    OptimizationMethod, AcquisitionFunction,
+
+    // NAS types
+    ArchitectureSearchSpace, ArchitectureConstraints, OptimalArchitecture,
+    NASStrategy, ArchitectureDescription,
+
+    // Model selection
+    ModelCandidate, SelectionCriteria, ModelRecommendation,
+
+    // Multi-objective
+    MultiObjectiveConfig, Objective, MOOMethod, ParetoFront, ParetoSolution,
+
+    // Meta-learning
+    DatasetFeatures, StatisticalFeatures, TemporalFeatures, ComplexityFeatures,
+
+    // Early stopping
+    EarlyStoppingConfig, EarlyStoppingMode,
+
+    // Core functions
+    auto_optimize_model, optimize_hyperparameters, search_neural_architecture,
+    auto_configure_ensemble,
 };
 
 /// Result type for ML operations

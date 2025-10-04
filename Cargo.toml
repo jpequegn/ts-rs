@@ -102,12 +102,13 @@ candle-core = "0.9"
 candle-nn = "0.9"
 tch = { version = "0.20", optional = true }
 
+# AutoML dependencies
+num_cpus = "1.0"
+libm = "0.2"
+
 [dev-dependencies]
 # Temporary files for testing
 tempfile = "3.0"
-
-# Random number generation for tests
-rand = "0.8"
 
 # Property-based testing
 proptest = "1.0"
