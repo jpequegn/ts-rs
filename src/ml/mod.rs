@@ -12,6 +12,7 @@ pub mod activations;
 pub mod persistence;
 pub mod recurrent;
 pub mod transformer;
+pub mod ensemble;
 
 // Re-export commonly used types
 pub use types::{
@@ -53,6 +54,34 @@ pub use transformer::{
     // Attention and encoding
     PositionalEncoding, PositionalEncodingType, MultiHeadAttention,
     TransformerEncoder, TransformerEncoderLayer, AttentionAnalysis,
+};
+
+pub use ensemble::{
+    // Core ensemble types
+    EnsembleForecaster, NeuralModelWrapper, TraditionalModelWrapper,
+    EnsembleConfig, CombinationStrategy, WeightOptimizationMethod,
+    UncertaintyMethod,
+
+    // Stacking ensemble
+    StackingEnsemble, MetaFeatureConfig,
+
+    // Dynamic weighting
+    DynamicWeightManager, AdaptationMethod,
+
+    // Diversity metrics
+    DiversityMetrics,
+
+    // Performance tracking
+    PerformanceHistory, ModelPerformance,
+
+    // Confidence weighting
+    ConfidenceWeightedEnsemble, ConfidenceCalibration,
+
+    // Results
+    EnsembleForecastResult, ModelPrediction, EnsembleTrainingResult,
+
+    // Core functions
+    create_ensemble_forecaster, optimize_ensemble_weights,
 };
 
 /// Result type for ML operations
