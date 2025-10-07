@@ -1,13 +1,13 @@
-use clap::Parser;
 use anyhow::Result;
+use clap::Parser;
 use colored::Colorize;
 use std::fs;
 use std::path::PathBuf;
 
 // Use our CLI module
-use chronos::cli::{Cli, Commands};
-use chronos::cli::interactive::InteractiveSession;
 use chronos::cli::commands::*;
+use chronos::cli::interactive::InteractiveSession;
+use chronos::cli::{Cli, Commands};
 use chronos::config::{Config, ConfigLoader};
 
 fn setup_logging(verbose: bool, quiet: bool) {
@@ -21,7 +21,10 @@ fn setup_output_directory(output_dir: &Option<PathBuf>) -> Result<()> {
     if let Some(dir) = output_dir {
         if !dir.exists() {
             fs::create_dir_all(dir)?;
-            println!("{}", format!("Created output directory: {}", dir.display()).green());
+            println!(
+                "{}",
+                format!("Created output directory: {}", dir.display()).green()
+            );
         }
     }
     Ok(())
@@ -33,7 +36,12 @@ fn load_configuration(config_path: &Option<PathBuf>, verbose: bool) -> Result<Co
     let config = match config_path {
         Some(path) => {
             if verbose {
-                println!("{}", format!("Loading configuration from: {}", path.display()).cyan().dimmed());
+                println!(
+                    "{}",
+                    format!("Loading configuration from: {}", path.display())
+                        .cyan()
+                        .dimmed()
+                );
             }
             loader.load_with_file(path)?
         }
@@ -46,7 +54,15 @@ fn load_configuration(config_path: &Option<PathBuf>, verbose: bool) -> Result<Co
     };
 
     if verbose {
-        println!("{}", format!("Configuration loaded successfully. Active profile: {}", config.metadata.active_profile).cyan().dimmed());
+        println!(
+            "{}",
+            format!(
+                "Configuration loaded successfully. Active profile: {}",
+                config.metadata.active_profile
+            )
+            .cyan()
+            .dimmed()
+        );
     }
 
     Ok(config)
@@ -72,7 +88,14 @@ fn main() -> Result<()> {
                 Ok(config) => Some(config),
                 Err(e) => {
                     if cli.verbose && !cli.quiet {
-                        println!("{}", format!("Warning: Could not load configuration: {}. Using defaults.", e).yellow());
+                        println!(
+                            "{}",
+                            format!(
+                                "Warning: Could not load configuration: {}. Using defaults.",
+                                e
+                            )
+                            .yellow()
+                        );
                     }
                     None
                 }
@@ -104,15 +127,21 @@ fn main() -> Result<()> {
         Some(Commands::Plugin(ref args)) => {
             println!("{}", "🔌 Plugin management feature coming soon...".cyan());
             println!("Plugin command received: {:?}", args);
-        },
+        }
         Some(Commands::Quality(ref args)) => execute_quality(args.clone(), &cli)?,
         None => {
             // No command provided, show help
             use clap::CommandFactory;
             let mut cmd = Cli::command();
             cmd.print_help()?;
-            println!("\n\n{}", "💡 Use --help with any subcommand for detailed options".cyan());
-            println!("{}", "💡 Use --interactive or -i to enter interactive mode".cyan());
+            println!(
+                "\n\n{}",
+                "💡 Use --help with any subcommand for detailed options".cyan()
+            );
+            println!(
+                "{}",
+                "💡 Use --interactive or -i to enter interactive mode".cyan()
+            );
         }
     }
 

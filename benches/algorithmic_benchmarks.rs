@@ -3,12 +3,12 @@
 //! This benchmark suite focuses on algorithmic complexity and efficiency
 //! of key time series analysis algorithms.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use chronos::*;
+use chrono::{DateTime, TimeZone, Utc};
 use chronos::anomaly::*;
 use chronos::forecasting::*;
 use chronos::seasonality::*;
-use chrono::{DateTime, Utc, TimeZone};
+use chronos::*;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::f64::consts::PI;
 
 /// Generate test time series of various sizes
@@ -53,17 +53,13 @@ fn bench_forecasting_algorithms(c: &mut Criterion) {
     for size in [100, 250, 500].iter() {
         let ts = generate_test_series("forecast", *size);
 
-        group.bench_with_input(
-            BenchmarkId::new("arima_forecast", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    // Note: This assumes ARIMA forecasting exists
-                    // Implementation will depend on actual API
-                    black_box(());
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("arima_forecast", size), size, |b, _| {
+            b.iter(|| {
+                // Note: This assumes ARIMA forecasting exists
+                // Implementation will depend on actual API
+                black_box(());
+            })
+        });
 
         group.bench_with_input(
             BenchmarkId::new("exponential_smoothing", size),

@@ -1037,7 +1037,7 @@ fn count_working_days_in_month(year: i32, month: u32) -> u32 {
 
 fn get_thanksgiving_date(year: i32) -> Option<NaiveDate> {
     // Fourth Thursday in November
-    if let Some(nov1) = NaiveDate::from_ymd_opt(year, 11, 1) {
+    if let Some(_nov1) = NaiveDate::from_ymd_opt(year, 11, 1) {
         let mut thursday_count = 0;
         for day in 1..=30 {
             if let Some(date) = NaiveDate::from_ymd_opt(year, 11, day) {

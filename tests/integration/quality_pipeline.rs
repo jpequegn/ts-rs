@@ -2,9 +2,9 @@
 //!
 //! These tests validate the complete quality assessment, cleaning, and monitoring workflows.
 
+use chrono::{DateTime, Duration, TimeZone, Utc};
 use chronos::quality::*;
 use chronos::TimeSeries;
-use chrono::{DateTime, Utc, Duration, TimeZone};
 use std::time::Instant;
 
 /// Create test data with known quality issues
@@ -44,8 +44,8 @@ fn create_degrading_quality_data(iteration: usize) -> TimeSeries {
     let mut timestamps = Vec::new();
     let mut values = Vec::new();
 
-    let noise_level = iteration as f64 * 2.0;  // Increasing noise
-    let missing_ratio = iteration as f64 * 0.01;  // Increasing missing data
+    let noise_level = iteration as f64 * 2.0; // Increasing noise
+    let missing_ratio = iteration as f64 * 0.01; // Increasing missing data
 
     for i in 0..100 {
         // Skip some values based on missing ratio
@@ -89,8 +89,14 @@ fn test_complete_quality_pipeline() {
     let profile = profile_timeseries(&data, &profiling_config).unwrap();
 
     // Verify profiling detected issues
-    assert!(profile.completeness.missing_count > 0, "Should detect missing values");
-    assert!(profile.completeness.completeness_ratio < 1.0, "Completeness should be < 100%");
+    assert!(
+        profile.completeness.missing_count > 0,
+        "Should detect missing values"
+    );
+    assert!(
+        profile.completeness.completeness_ratio < 1.0,
+        "Completeness should be < 100%"
+    );
     assert!(!profile.gaps.is_empty(), "Should detect gaps");
 
     // Step 2: Assess quality
@@ -98,8 +104,14 @@ fn test_complete_quality_pipeline() {
     let assessment = assess_quality(&data, &quality_config).unwrap();
 
     // Verify assessment detected issues
-    assert!(assessment.overall_score < 90.0, "Should detect quality issues");
-    assert!(assessment.overall_score >= 0.0 && assessment.overall_score <= 100.0, "Score should be 0-100");
+    assert!(
+        assessment.overall_score < 90.0,
+        "Should detect quality issues"
+    );
+    assert!(
+        assessment.overall_score >= 0.0 && assessment.overall_score <= 100.0,
+        "Score should be 0-100"
+    );
 
     // Verify dimension scores
     assert!(assessment.dimension_scores.completeness >= 0.0);
@@ -113,10 +125,8 @@ fn test_complete_quality_pipeline() {
     let cleaning_result = clean_timeseries(&data, &CleaningConfig::default()).unwrap();
 
     // Verify cleaning improved quality
-    let post_cleaning_assessment = assess_quality(
-        &cleaning_result.cleaned_data,
-        &quality_config,
-    ).unwrap();
+    let post_cleaning_assessment =
+        assess_quality(&cleaning_result.cleaned_data, &quality_config).unwrap();
 
     assert!(
         post_cleaning_assessment.overall_score >= assessment.overall_score,
@@ -124,9 +134,13 @@ fn test_complete_quality_pipeline() {
     );
 
     // Verify cleaning report
-    assert!(cleaning_result.cleaning_report.modifications.len() > 0, "Should record modifications");
     assert!(
-        cleaning_result.cleaning_report.modifications.len() as f64 / data.len() as f64 <= cleaning_config.max_modifications,
+        cleaning_result.cleaning_report.modifications.len() > 0,
+        "Should record modifications"
+    );
+    assert!(
+        cleaning_result.cleaning_report.modifications.len() as f64 / data.len() as f64
+            <= cleaning_config.max_modifications,
         "Should respect max modifications limit"
     );
 }
@@ -151,7 +165,10 @@ fn test_quality_monitoring_workflow() {
     }
 
     // Verify quality degradation was detected
-    assert!(scores[0] > scores[9], "Quality should degrade over iterations");
+    assert!(
+        scores[0] > scores[9],
+        "Quality should degrade over iterations"
+    );
 
     // Check for quality degradation alerts
     let thresholds = QualityThresholds::default();
@@ -166,7 +183,11 @@ fn test_quality_monitoring_workflow() {
 
     // Verify tracking data
     let quality_series = tracker.get_quality_series();
-    assert_eq!(quality_series.data_points.len(), 10, "Should track all 10 assessments");
+    assert_eq!(
+        quality_series.data_points.len(),
+        10,
+        "Should track all 10 assessments"
+    );
 }
 
 #[test]
@@ -179,7 +200,10 @@ fn test_outlier_detection_methods() {
         ..OutlierConfig::default()
     };
     let zscore_outliers = detect_outliers(&data, &outlier_config).unwrap();
-    assert!(!zscore_outliers.outliers.is_empty(), "Z-score should detect outliers");
+    assert!(
+        !zscore_outliers.outliers.is_empty(),
+        "Z-score should detect outliers"
+    );
 
     // Test IQR method
     let iqr_config = OutlierConfig {
@@ -187,7 +211,10 @@ fn test_outlier_detection_methods() {
         ..OutlierConfig::default()
     };
     let iqr_outliers = detect_outliers(&data, &iqr_config).unwrap();
-    assert!(!iqr_outliers.outliers.is_empty(), "IQR should detect outliers");
+    assert!(
+        !iqr_outliers.outliers.is_empty(),
+        "IQR should detect outliers"
+    );
 
     // Test ensemble method
     let ensemble_config = OutlierConfig {
@@ -195,13 +222,19 @@ fn test_outlier_detection_methods() {
         ..OutlierConfig::default()
     };
     let ensemble_outliers = detect_outliers(&data, &ensemble_config).unwrap();
-    assert!(!ensemble_outliers.outliers.is_empty(), "Ensemble should detect outliers");
+    assert!(
+        !ensemble_outliers.outliers.is_empty(),
+        "Ensemble should detect outliers"
+    );
 
     // Verify outlier context
     for outlier in &zscore_outliers.outliers {
         assert!(outlier.index < data.len(), "Outlier index should be valid");
         assert!(outlier.timestamp.is_some(), "Outlier should have timestamp");
-        assert!(outlier.severity != OutlierSeverity::None, "Outlier should have severity");
+        assert!(
+            outlier.severity != OutlierSeverity::None,
+            "Outlier should have severity"
+        );
     }
 }
 
@@ -226,7 +259,8 @@ fn test_data_cleaning_methods() {
     let outlier_config = OutlierConfig::default();
     let outliers = detect_outliers(&data, &outlier_config).unwrap();
 
-    let corrected_result = correct_outliers(&data, &outliers, &OutlierCorrection::MedianReplace).unwrap();
+    let corrected_result =
+        correct_outliers(&data, &outliers, &OutlierCorrection::MedianReplace).unwrap();
 
     // Verify outliers were corrected
     assert_eq!(
@@ -366,8 +400,7 @@ fn test_quality_weights() {
 
     // Scores should differ based on weights
     assert_ne!(
-        completeness_assessment.overall_score,
-        validity_assessment.overall_score,
+        completeness_assessment.overall_score, validity_assessment.overall_score,
         "Different weights should produce different scores"
     );
 }
@@ -385,12 +418,15 @@ fn test_error_handling() {
 
     // Test with invalid configuration
     let invalid_config = QualityConfig {
-        completeness_threshold: 1.5,  // Invalid: should be 0-1
+        completeness_threshold: 1.5, // Invalid: should be 0-1
         ..QualityConfig::default()
     };
 
     // Configuration validation should catch this
-    assert!(invalid_config.completeness_threshold > 1.0, "Invalid config for testing");
+    assert!(
+        invalid_config.completeness_threshold > 1.0,
+        "Invalid config for testing"
+    );
 }
 
 #[test]
@@ -408,7 +444,10 @@ fn test_cleaning_reversibility() {
     let cleaning_result = clean_timeseries(&data, &cleaning_config).unwrap();
 
     // Verify modifications are tracked
-    assert!(!cleaning_result.cleaning_report.modifications.is_empty(), "Should track modifications");
+    assert!(
+        !cleaning_result.cleaning_report.modifications.is_empty(),
+        "Should track modifications"
+    );
 
     // Verify data characteristics are preserved
     let cleaned_len = cleaning_result.cleaned_data.len();
@@ -429,12 +468,24 @@ fn test_quality_recommendations() {
     let recommendations = generate_recommendations(&assessment, &data);
 
     // Verify recommendations are generated for issues
-    assert!(!recommendations.is_empty(), "Should generate recommendations for quality issues");
+    assert!(
+        !recommendations.is_empty(),
+        "Should generate recommendations for quality issues"
+    );
 
     // Verify recommendation structure
     for rec in &recommendations {
-        assert!(!rec.issue.is_empty(), "Recommendation should have issue description");
-        assert!(!rec.recommendation.is_empty(), "Recommendation should have suggestion");
-        assert!(rec.priority != Priority::None, "Recommendation should have priority");
+        assert!(
+            !rec.issue.is_empty(),
+            "Recommendation should have issue description"
+        );
+        assert!(
+            !rec.recommendation.is_empty(),
+            "Recommendation should have suggestion"
+        );
+        assert!(
+            rec.priority != Priority::None,
+            "Recommendation should have priority"
+        );
     }
 }

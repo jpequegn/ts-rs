@@ -102,7 +102,7 @@ impl NeuralArchitectureSearch {
 
         for _gen in 0..generations {
             // Evaluate fitness
-            let mut fitness: Vec<_> = population
+            let fitness: Vec<_> = population
                 .iter()
                 .map(|arch| self.estimate_performance(arch))
                 .collect();
@@ -337,11 +337,15 @@ impl NeuralArchitectureSearch {
         architecture: ArchitectureDescription,
         performance: f64,
     ) -> OptimalArchitecture {
+        // Calculate values before moving architecture
+        let n_parameters = self.estimate_parameters(&architecture);
+        let memory_gb = self.estimate_memory(&architecture);
+
         OptimalArchitecture {
             architecture,
             performance,
-            n_parameters: self.estimate_parameters(&architecture),
-            memory_gb: self.estimate_memory(&architecture),
+            n_parameters,
+            memory_gb,
         }
     }
 }

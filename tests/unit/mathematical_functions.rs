@@ -3,14 +3,14 @@
 //! This module provides comprehensive unit tests for mathematical correctness,
 //! edge case handling, and algorithmic accuracy across all statistical functions.
 
-use chronos::*;
-use chronos::stats::*;
-use chronos::trend::*;
-use chrono::{DateTime, Utc, TimeZone};
-use std::f64::consts::PI;
 use approx::assert_relative_eq;
-use test_case::test_case;
+use chrono::{DateTime, TimeZone, Utc};
+use chronos::stats::*;
 use chronos::trend::detection::detect_trend;
+use chronos::trend::*;
+use chronos::*;
+use std::f64::consts::PI;
+use test_case::test_case;
 
 /// Create a simple test time series with known statistical properties
 fn create_test_timeseries(name: &str, size: usize) -> TimeSeries {
@@ -23,7 +23,12 @@ fn create_test_timeseries(name: &str, size: usize) -> TimeSeries {
 }
 
 /// Create a time series with known sine wave pattern for testing periodicity
-fn create_sine_wave_timeseries(name: &str, size: usize, frequency: f64, amplitude: f64) -> TimeSeries {
+fn create_sine_wave_timeseries(
+    name: &str,
+    size: usize,
+    frequency: f64,
+    amplitude: f64,
+) -> TimeSeries {
     let timestamps: Vec<DateTime<Utc>> = (0..size)
         .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
         .collect();
@@ -168,7 +173,11 @@ mod autocorrelation_tests {
 
         // All values should be between -1 and 1
         for &value in &autocorr.values {
-            assert!(value >= -1.0 && value <= 1.0, "Autocorrelation value {} out of bounds", value);
+            assert!(
+                value >= -1.0 && value <= 1.0,
+                "Autocorrelation value {} out of bounds",
+                value
+            );
         }
     }
 
@@ -193,7 +202,11 @@ mod autocorrelation_tests {
 
         // All PACF values should be bounded
         for &value in &pacf.values {
-            assert!(value >= -1.0 && value <= 1.0, "PACF value {} out of bounds", value);
+            assert!(
+                value >= -1.0 && value <= 1.0,
+                "PACF value {} out of bounds",
+                value
+            );
         }
     }
 }
@@ -237,7 +250,10 @@ mod trend_detection_tests {
         let analysis_result = analyze_comprehensive(&ts.timestamps, &ts.values, None).unwrap();
 
         // Should detect strong trend
-        assert!(analysis_result.trend_summary.strength >= 0.0 && analysis_result.trend_summary.strength <= 1.0);
+        assert!(
+            analysis_result.trend_summary.strength >= 0.0
+                && analysis_result.trend_summary.strength <= 1.0
+        );
     }
 }
 

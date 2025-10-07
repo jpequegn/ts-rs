@@ -4,26 +4,25 @@
 //! algorithms maintain their mathematical properties across a wide range
 //! of inputs, including edge cases and randomly generated data.
 
-use chronos::*;
+use approx::assert_relative_eq;
+use chrono::{DateTime, TimeZone, Utc};
 use chronos::stats::*;
-use chrono::{DateTime, Utc, TimeZone};
+use chronos::*;
 use proptest::prelude::*;
 use quickcheck::{quickcheck, TestResult};
-use approx::assert_relative_eq;
 
 /// Generate arbitrary time series for property testing
 fn arbitrary_timeseries() -> impl Strategy<Value = TimeSeries> {
-    (1usize..1000, prop::collection::vec(any::<f64>(), 1..1000))
-        .prop_filter_map("Valid time series", |(seed, values)| {
+    (1usize..1000, prop::collection::vec(any::<f64>(), 1..1000)).prop_filter_map(
+        "Valid time series",
+        |(seed, values)| {
             let size = values.len();
             let timestamps: Vec<DateTime<Utc>> = (0..size)
                 .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
                 .collect();
 
             // Filter out invalid values (NaN, infinite)
-            let valid_values: Vec<f64> = values.into_iter()
-                .filter(|v| v.is_finite())
-                .collect();
+            let valid_values: Vec<f64> = values.into_iter().filter(|v| v.is_finite()).collect();
 
             if valid_values.is_empty() {
                 None
@@ -31,20 +30,20 @@ fn arbitrary_timeseries() -> impl Strategy<Value = TimeSeries> {
                 let valid_timestamps = timestamps.into_iter().take(valid_values.len()).collect();
                 TimeSeries::new(format!("test_{}", seed), valid_timestamps, valid_values).ok()
             }
-        })
+        },
+    )
 }
 
 /// Generate time series with specific constraints for testing
 fn bounded_timeseries(min_val: f64, max_val: f64) -> impl Strategy<Value = TimeSeries> {
-    (1usize..500, prop::collection::vec(min_val..max_val, 1..500))
-        .prop_map(|(seed, values)| {
-            let size = values.len();
-            let timestamps: Vec<DateTime<Utc>> = (0..size)
-                .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
-                .collect();
+    (1usize..500, prop::collection::vec(min_val..max_val, 1..500)).prop_map(|(seed, values)| {
+        let size = values.len();
+        let timestamps: Vec<DateTime<Utc>> = (0..size)
+            .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
+            .collect();
 
-            TimeSeries::new(format!("bounded_{}", seed), timestamps, values).unwrap()
-        })
+        TimeSeries::new(format!("bounded_{}", seed), timestamps, values).unwrap()
+    })
 }
 
 proptest! {
@@ -218,31 +217,31 @@ mod quickcheck_properties {
     #[test]
     fn qc_autocorrelation_decreases_with_randomness() {
         fn prop(size: u8, seed: u64) -> TestResult {
-        if size < 10 {
-            return TestResult::discard();
-        }
+            if size < 10 {
+                return TestResult::discard();
+            }
 
-        // Create a pseudo-random series
-        let mut rng_state = seed;
-        let values: Vec<f64> = (0..size)
-            .map(|_| {
-                // Simple LCG for reproducible randomness
-                rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
-                (rng_state as f64) / (u64::MAX as f64) * 100.0 - 50.0
-            })
-            .collect();
+            // Create a pseudo-random series
+            let mut rng_state = seed;
+            let values: Vec<f64> = (0..size)
+                .map(|_| {
+                    // Simple LCG for reproducible randomness
+                    rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
+                    (rng_state as f64) / (u64::MAX as f64) * 100.0 - 50.0
+                })
+                .collect();
 
-        if let Some(ts) = create_test_series(values) {
-            if let Ok(autocorr) = compute_autocorrelation(&ts.values, 5) {
-                // For random data, autocorrelation should generally decrease with lag
-                // This is probabilistic, so we use a weak test
-                TestResult::from_bool(autocorr.values.len() >= 2)
+            if let Some(ts) = create_test_series(values) {
+                if let Ok(autocorr) = compute_autocorrelation(&ts.values, 5) {
+                    // For random data, autocorrelation should generally decrease with lag
+                    // This is probabilistic, so we use a weak test
+                    TestResult::from_bool(autocorr.values.len() >= 2)
+                } else {
+                    TestResult::discard()
+                }
             } else {
                 TestResult::discard()
             }
-        } else {
-            TestResult::discard()
-        }
         }
         quickcheck::quickcheck(prop as fn(u8, u64) -> TestResult);
     }

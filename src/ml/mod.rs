@@ -109,13 +109,16 @@ pub use automl::{
     // Meta-learning
     DatasetFeatures, StatisticalFeatures, TemporalFeatures, ComplexityFeatures,
 
-    // Early stopping
-    EarlyStoppingConfig, EarlyStoppingMode,
+    // Early stopping (renamed to avoid conflict with types::EarlyStoppingConfig)
+    EarlyStoppingConfig as AutoMLEarlyStoppingConfig, EarlyStoppingMode,
 
-    // Core functions
-    auto_optimize_model, optimize_hyperparameters, search_neural_architecture,
-    auto_configure_ensemble,
+    // Core functions (explicitly imported to avoid ambiguity from wildcard imports)
+    auto_optimize_model, auto_configure_ensemble,
 };
+
+// Explicitly import functions from their implementation modules to avoid ambiguity
+pub use automl::hyperparameter::optimize_hyperparameters;
+pub use automl::nas::search_neural_architecture;
 
 pub use interfaces::{ForecastingModel, ModelCapabilities};
 

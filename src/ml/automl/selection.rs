@@ -8,7 +8,6 @@
 
 use super::types::*;
 use crate::timeseries::TimeSeries;
-use crate::ml::MLResult;
 use std::collections::HashMap;
 
 // ================================================================================================
@@ -176,7 +175,7 @@ fn extract_temporal_features(data: &TimeSeries) -> TemporalFeatures {
     TemporalFeatures {
         trend_strength,
         seasonality_strength,
-        frequency: data.frequency.clone(),
+        frequency: data.frequency.as_ref().map(|f| format!("{:?}", f)),
         n_observations: values.len(),
     }
 }

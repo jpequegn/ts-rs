@@ -3,11 +3,11 @@
 //! This benchmark suite measures the performance of core statistical
 //! algorithms to detect performance regressions and guide optimization efforts.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use chronos::*;
+use chrono::{DateTime, TimeZone, Utc};
 use chronos::stats::*;
 use chronos::trend::*;
-use chrono::{DateTime, Utc, TimeZone};
+use chronos::*;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::f64::consts::PI;
 
 /// Generate test time series of various sizes for benchmarking
@@ -54,11 +54,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("compute_descriptive_stats", size),
             size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(compute_descriptive_stats(black_box(&ts)).unwrap())
-                })
-            },
+            |b, _| b.iter(|| black_box(compute_descriptive_stats(black_box(&ts)).unwrap())),
         );
     }
 
@@ -75,21 +71,13 @@ fn bench_autocorrelation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("autocorrelation_lag_10", size),
             size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(compute_autocorrelation(black_box(&ts), 10).unwrap())
-                })
-            },
+            |b, _| b.iter(|| black_box(compute_autocorrelation(black_box(&ts), 10).unwrap())),
         );
 
         group.bench_with_input(
             BenchmarkId::new("autocorrelation_lag_50", size),
             size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(compute_autocorrelation(black_box(&ts), 50).unwrap())
-                })
-            },
+            |b, _| b.iter(|| black_box(compute_autocorrelation(black_box(&ts), 50).unwrap())),
         );
     }
 
@@ -103,15 +91,9 @@ fn bench_partial_autocorrelation(c: &mut Criterion) {
     for size in [100, 1000, 5000].iter() {
         let ts = generate_sine_series("bench", *size, 0.05);
 
-        group.bench_with_input(
-            BenchmarkId::new("pacf_lag_20", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(compute_partial_autocorrelation(black_box(&ts), 20).unwrap())
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("pacf_lag_20", size), size, |b, _| {
+            b.iter(|| black_box(compute_partial_autocorrelation(black_box(&ts), 20).unwrap()))
+        });
     }
 
     group.finish();
@@ -124,15 +106,11 @@ fn bench_trend_detection(c: &mut Criterion) {
     for size in [100, 1000, 5000].iter() {
         let ts = generate_trend_series("bench", *size, 0.1);
 
-        group.bench_with_input(
-            BenchmarkId::new("mann_kendall", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(test_trend_significance(black_box(&ts), TrendTest::MannKendall).unwrap())
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("mann_kendall", size), size, |b, _| {
+            b.iter(|| {
+                black_box(test_trend_significance(black_box(&ts), TrendTest::MannKendall).unwrap())
+            })
+        });
     }
 
     group.finish();
@@ -145,15 +123,14 @@ fn bench_stationarity_tests(c: &mut Criterion) {
     for size in [100, 1000, 5000].iter() {
         let ts = generate_trend_series("bench", *size, 0.05);
 
-        group.bench_with_input(
-            BenchmarkId::new("adf_test", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(test_stationarity(black_box(&ts), StationarityTest::AugmentedDickeyFuller).unwrap())
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("adf_test", size), size, |b, _| {
+            b.iter(|| {
+                black_box(
+                    test_stationarity(black_box(&ts), StationarityTest::AugmentedDickeyFuller)
+                        .unwrap(),
+                )
+            })
+        });
     }
 
     group.finish();
@@ -171,7 +148,13 @@ fn bench_decomposition(c: &mut Criterion) {
             size,
             |b, _| {
                 b.iter(|| {
-                    black_box(perform_decomposition(black_box(&ts), DecompositionMethod::ClassicalAdditive).unwrap())
+                    black_box(
+                        perform_decomposition(
+                            black_box(&ts),
+                            DecompositionMethod::ClassicalAdditive,
+                        )
+                        .unwrap(),
+                    )
                 })
             },
         );
@@ -181,7 +164,13 @@ fn bench_decomposition(c: &mut Criterion) {
             size,
             |b, _| {
                 b.iter(|| {
-                    black_box(perform_decomposition(black_box(&ts), DecompositionMethod::ClassicalMultiplicative).unwrap())
+                    black_box(
+                        perform_decomposition(
+                            black_box(&ts),
+                            DecompositionMethod::ClassicalMultiplicative,
+                        )
+                        .unwrap(),
+                    )
                 })
             },
         );
@@ -197,15 +186,9 @@ fn bench_comprehensive_analysis(c: &mut Criterion) {
     for size in [100, 500, 1000].iter() {
         let ts = generate_sine_series("bench", *size, 0.1);
 
-        group.bench_with_input(
-            BenchmarkId::new("full_analysis", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(analyze_comprehensive(black_box(&ts)).unwrap())
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("full_analysis", size), size, |b, _| {
+            b.iter(|| black_box(analyze_comprehensive(black_box(&ts)).unwrap()))
+        });
     }
 
     group.finish();
@@ -221,11 +204,7 @@ fn bench_changepoint_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("detect_changepoints", size),
             size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(detect_changepoints(black_box(&ts)).unwrap())
-                })
-            },
+            |b, _| b.iter(|| black_box(detect_changepoints(black_box(&ts)).unwrap())),
         );
     }
 
@@ -244,21 +223,15 @@ fn bench_data_characteristics(c: &mut Criterion) {
     let trend_ts = generate_trend_series("trend", size, 0.2);
 
     group.bench_function("linear_data_stats", |b| {
-        b.iter(|| {
-            black_box(compute_descriptive_stats(black_box(&linear_ts)).unwrap())
-        })
+        b.iter(|| black_box(compute_descriptive_stats(black_box(&linear_ts)).unwrap()))
     });
 
     group.bench_function("sine_data_stats", |b| {
-        b.iter(|| {
-            black_box(compute_descriptive_stats(black_box(&sine_ts)).unwrap())
-        })
+        b.iter(|| black_box(compute_descriptive_stats(black_box(&sine_ts)).unwrap()))
     });
 
     group.bench_function("trend_data_stats", |b| {
-        b.iter(|| {
-            black_box(compute_descriptive_stats(black_box(&trend_ts)).unwrap())
-        })
+        b.iter(|| black_box(compute_descriptive_stats(black_box(&trend_ts)).unwrap()))
     });
 
     group.finish();
@@ -275,11 +248,7 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("large_dataset_stats", size),
             size,
-            |b, _| {
-                b.iter(|| {
-                    black_box(compute_descriptive_stats(black_box(&ts)).unwrap())
-                })
-            },
+            |b, _| b.iter(|| black_box(compute_descriptive_stats(black_box(&ts)).unwrap())),
         );
     }
 

@@ -113,7 +113,7 @@ fn process_single_report(
 /// Generate a comparison report across multiple datasets
 pub fn generate_comparison_report(
     reports: &[ReportResult],
-    config: &BatchReportConfig,
+    _config: &BatchReportConfig,
 ) -> Result<ReportResult> {
     let mut content = String::new();
 

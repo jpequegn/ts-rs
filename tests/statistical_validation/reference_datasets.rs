@@ -3,12 +3,12 @@
 //! This module validates our statistical algorithms against published datasets
 //! and known results from academic literature and other statistical packages.
 
-use chronos::*;
-use chronos::stats::*;
-use chronos::trend::*;
-use chrono::{DateTime, Utc, TimeZone};
 use approx::assert_relative_eq;
+use chrono::{DateTime, TimeZone, Utc};
+use chronos::stats::*;
 use chronos::trend::detection::detect_trend;
+use chronos::trend::*;
+use chronos::*;
 use std::collections::HashMap;
 
 /// Reference dataset from NIST for statistical validation
@@ -16,10 +16,9 @@ use std::collections::HashMap;
 fn create_nist_norris_dataset() -> TimeSeries {
     // Norris dataset - simple linear regression benchmark
     let x_values = vec![
-        0.2, 337.4, 118.2, 884.6, 10.1, 226.5, 666.3, 996.3, 448.6, 777.0,
-        558.2, 0.4, 0.6, 775.5, 666.9, 338.0, 447.5, 11.6, 556.0, 228.1,
-        995.8, 887.6, 120.2, 0.3, 0.3, 556.8, 339.1, 887.2, 1000.0, 779.0,
-        11.1, 118.3, 229.2, 669.1, 448.9, 0.5
+        0.2, 337.4, 118.2, 884.6, 10.1, 226.5, 666.3, 996.3, 448.6, 777.0, 558.2, 0.4, 0.6, 775.5,
+        666.9, 338.0, 447.5, 11.6, 556.0, 228.1, 995.8, 887.6, 120.2, 0.3, 0.3, 556.8, 339.1,
+        887.2, 1000.0, 779.0, 11.1, 118.3, 229.2, 669.1, 448.9, 0.5,
     ];
 
     let timestamps: Vec<DateTime<Utc>> = (0..x_values.len())
@@ -34,25 +33,24 @@ fn create_airline_passengers_dataset() -> TimeSeries {
     // Monthly totals of international airline passengers, 1949-1960
     // This is a well-known time series with trend and seasonality
     let passengers = vec![
-        112, 118, 132, 129, 121, 135, 148, 148, 136, 119, 104, 118,
-        115, 126, 141, 135, 125, 149, 170, 170, 158, 133, 114, 140,
-        145, 150, 178, 163, 172, 178, 199, 199, 184, 162, 146, 166,
-        171, 180, 193, 181, 183, 218, 230, 242, 209, 191, 172, 194,
-        196, 196, 236, 235, 229, 243, 264, 272, 237, 211, 180, 201,
-        204, 188, 235, 227, 234, 264, 302, 293, 259, 229, 203, 229,
-        242, 233, 267, 269, 270, 315, 364, 347, 312, 274, 237, 278,
-        284, 277, 317, 313, 318, 374, 413, 405, 355, 306, 271, 306,
-        315, 301, 356, 348, 355, 422, 465, 467, 404, 347, 305, 336,
-        340, 318, 362, 348, 363, 435, 491, 505, 404, 359, 310, 337,
-        360, 342, 406, 396, 420, 472, 548, 559, 463, 407, 362, 405,
-        417, 391, 419, 461, 472, 535, 622, 606, 508, 461, 390, 432
+        112, 118, 132, 129, 121, 135, 148, 148, 136, 119, 104, 118, 115, 126, 141, 135, 125, 149,
+        170, 170, 158, 133, 114, 140, 145, 150, 178, 163, 172, 178, 199, 199, 184, 162, 146, 166,
+        171, 180, 193, 181, 183, 218, 230, 242, 209, 191, 172, 194, 196, 196, 236, 235, 229, 243,
+        264, 272, 237, 211, 180, 201, 204, 188, 235, 227, 234, 264, 302, 293, 259, 229, 203, 229,
+        242, 233, 267, 269, 270, 315, 364, 347, 312, 274, 237, 278, 284, 277, 317, 313, 318, 374,
+        413, 405, 355, 306, 271, 306, 315, 301, 356, 348, 355, 422, 465, 467, 404, 347, 305, 336,
+        340, 318, 362, 348, 363, 435, 491, 505, 404, 359, 310, 337, 360, 342, 406, 396, 420, 472,
+        548, 559, 463, 407, 362, 405, 417, 391, 419, 461, 472, 535, 622, 606, 508, 461, 390, 432,
     ];
 
-    let timestamps: Vec<DateTime<Utc>> = passengers.iter().enumerate()
+    let timestamps: Vec<DateTime<Utc>> = passengers
+        .iter()
+        .enumerate()
         .map(|(i, _)| {
             let year = 1949 + (i / 12);
             let month = (i % 12) + 1;
-            Utc.with_ymd_and_hms(year as i32, month as u32, 1, 0, 0, 0).unwrap()
+            Utc.with_ymd_and_hms(year as i32, month as u32, 1, 0, 0, 0)
+                .unwrap()
         })
         .collect();
 
@@ -66,15 +64,19 @@ fn create_sunspot_dataset() -> TimeSeries {
     // Annual sunspot numbers (simplified version for testing)
     // Real dataset would be much longer
     let sunspots = vec![
-        5.0, 11.0, 16.0, 23.0, 36.0, 58.0, 29.0, 20.0, 10.0, 8.0,
-        3.0, 0.0, 0.0, 2.0, 11.0, 27.0, 47.0, 63.0, 60.0, 39.0,
-        28.0, 26.0, 22.0, 11.0, 21.0, 40.0, 78.0, 122.0, 103.0, 73.0,
-        47.0, 35.0, 11.0, 5.0, 16.0, 34.0, 70.0, 81.0, 111.0, 101.0,
-        73.0, 40.0, 20.0, 16.0, 5.0, 11.0, 22.0, 40.0, 60.0, 80.9
+        5.0, 11.0, 16.0, 23.0, 36.0, 58.0, 29.0, 20.0, 10.0, 8.0, 3.0, 0.0, 0.0, 2.0, 11.0, 27.0,
+        47.0, 63.0, 60.0, 39.0, 28.0, 26.0, 22.0, 11.0, 21.0, 40.0, 78.0, 122.0, 103.0, 73.0, 47.0,
+        35.0, 11.0, 5.0, 16.0, 34.0, 70.0, 81.0, 111.0, 101.0, 73.0, 40.0, 20.0, 16.0, 5.0, 11.0,
+        22.0, 40.0, 60.0, 80.9,
     ];
 
-    let timestamps: Vec<DateTime<Utc>> = sunspots.iter().enumerate()
-        .map(|(i, _)| Utc.with_ymd_and_hms(1900 + i as i32, 1, 1, 0, 0, 0).unwrap())
+    let timestamps: Vec<DateTime<Utc>> = sunspots
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            Utc.with_ymd_and_hms(1900 + i as i32, 1, 1, 0, 0, 0)
+                .unwrap()
+        })
         .collect();
 
     TimeSeries::new("Sunspots".to_string(), timestamps, sunspots).unwrap()
@@ -271,7 +273,8 @@ mod accuracy_benchmarks {
             .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
             .collect();
 
-        let stationary_ts = TimeSeries::new("stationary".to_string(), timestamps, stationary_values).unwrap();
+        let stationary_ts =
+            TimeSeries::new("stationary".to_string(), timestamps, stationary_values).unwrap();
 
         // Create clearly non-stationary series (random walk)
         let mut nonstationary_values = vec![0.0];
@@ -284,7 +287,12 @@ mod accuracy_benchmarks {
             .map(|i| Utc.timestamp_opt(1000000000 + i as i64 * 3600, 0).unwrap())
             .collect();
 
-        let nonstationary_ts = TimeSeries::new("nonstationary".to_string(), timestamps2, nonstationary_values).unwrap();
+        let nonstationary_ts = TimeSeries::new(
+            "nonstationary".to_string(),
+            timestamps2,
+            nonstationary_values,
+        )
+        .unwrap();
 
         // Test stationarity
         // Comment out stationarity tests until API is clarified

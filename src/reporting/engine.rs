@@ -257,7 +257,7 @@ impl ReportEngine {
         &self,
         content: &ReportContent,
         output_path: &str,
-        duration_ms: u64,
+        _duration_ms: u64,
     ) -> Result<ReportExportInfo> {
         let start_time = std::time::Instant::now();
 

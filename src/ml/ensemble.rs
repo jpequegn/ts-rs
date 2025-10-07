@@ -9,9 +9,8 @@ use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
 use crate::ml::{MLError, MLResult};
-use crate::ml::recurrent::{LSTMForecaster, GRUForecaster, TimeSeriesDataset};
+use crate::ml::recurrent::{LSTMForecaster, GRUForecaster};
 use crate::ml::transformer::TransformerForecaster;
-use crate::timeseries::TimeSeries;
 
 // ============================================================================
 // Core Ensemble Types
