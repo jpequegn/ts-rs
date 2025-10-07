@@ -337,11 +337,15 @@ impl NeuralArchitectureSearch {
         architecture: ArchitectureDescription,
         performance: f64,
     ) -> OptimalArchitecture {
+        // Calculate values before moving architecture
+        let n_parameters = self.estimate_parameters(&architecture);
+        let memory_gb = self.estimate_memory(&architecture);
+
         OptimalArchitecture {
             architecture,
             performance,
-            n_parameters: self.estimate_parameters(&architecture),
-            memory_gb: self.estimate_memory(&architecture),
+            n_parameters,
+            memory_gb,
         }
     }
 }
