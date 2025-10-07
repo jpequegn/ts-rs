@@ -3,16 +3,17 @@
 //! This module provides Transformer-based models with self-attention mechanisms
 //! optimized for time series forecasting, enabling capture of long-range dependencies.
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::ml::{MLError, MLResult};
+use crate::ml::interfaces::ForecastingModel;
+use crate::ml::tensor::{DataType, Shape, Tensor};
 use crate::ml::types::{
-    NeuralNetwork, Layer, TrainingConfig, Device, OptimizerType,
-    LossFunction, TrainingHistory, EpochMetrics, ActivationType,
+    ActivationType, Device, EpochMetrics, Layer, LossFunction, NeuralNetwork, OptimizerType,
+    TrainingConfig, TrainingHistory,
 };
-use crate::ml::tensor::{Tensor, Shape, DataType};
+use crate::ml::{MLError, MLResult};
 use crate::timeseries::TimeSeries;
 
 // ============================================================================
@@ -108,11 +109,7 @@ impl PositionalEncoding {
         for pos in 0..sequence_length {
             for i in 0..self.d_model {
                 let angle = pos as f64 / 10000_f64.powf(2.0 * (i / 2) as f64 / self.d_model as f64);
-                encoding[pos][i] = if i % 2 == 0 {
-                    angle.sin()
-                } else {
-                    angle.cos()
-                };
+                encoding[pos][i] = if i % 2 == 0 { angle.sin() } else { angle.cos() };
             }
         }
 
@@ -129,14 +126,16 @@ impl PositionalEncoding {
                 }
 
                 let base_time = timestamps[0];
-                let positions: Vec<f64> = timestamps.iter()
+                let positions: Vec<f64> = timestamps
+                    .iter()
                     .map(|t| (*t - base_time).num_seconds() as f64)
                     .collect();
 
                 // Normalize to [0, sequence_length)
                 let max_pos = positions.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
                 let normalized: Vec<usize> = if max_pos > 0.0 {
-                    positions.iter()
+                    positions
+                        .iter()
                         .map(|p| (p / max_pos * (timestamps.len() - 1) as f64) as usize)
                         .collect()
                 } else {
@@ -217,19 +216,29 @@ impl MultiHeadAttention {
 
     /// Apply softmax to attention scores
     pub fn softmax_attention(&self, scores: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
-        scores.iter().map(|row| {
-            let max_score = row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-            let exp_scores: Vec<f32> = row.iter()
-                .map(|&s| if s == f32::NEG_INFINITY { 0.0 } else { (s - max_score).exp() })
-                .collect();
-            let sum: f32 = exp_scores.iter().sum();
+        scores
+            .iter()
+            .map(|row| {
+                let max_score = row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+                let exp_scores: Vec<f32> = row
+                    .iter()
+                    .map(|&s| {
+                        if s == f32::NEG_INFINITY {
+                            0.0
+                        } else {
+                            (s - max_score).exp()
+                        }
+                    })
+                    .collect();
+                let sum: f32 = exp_scores.iter().sum();
 
-            if sum > 0.0 {
-                exp_scores.iter().map(|&e| e / sum).collect()
-            } else {
-                vec![0.0; row.len()]
-            }
-        }).collect()
+                if sum > 0.0 {
+                    exp_scores.iter().map(|&e| e / sum).collect()
+                } else {
+                    vec![0.0; row.len()]
+                }
+            })
+            .collect()
     }
 }
 
@@ -280,11 +289,8 @@ pub struct TransformerEncoderLayer {
 impl TransformerEncoderLayer {
     /// Create new encoder layer
     pub fn new(config: &TransformerConfig) -> MLResult<Self> {
-        let self_attention = MultiHeadAttention::new(
-            config.n_heads,
-            config.d_model,
-            config.attention_dropout,
-        )?;
+        let self_attention =
+            MultiHeadAttention::new(config.n_heads, config.d_model, config.attention_dropout)?;
 
         Ok(Self {
             self_attention,
@@ -340,9 +346,7 @@ impl NormalizationParams {
     /// Create from data
     pub fn from_data(data: &[f64]) -> Self {
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / data.len() as f64;
+        let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
         let std = variance.sqrt().max(1e-8);
 
         Self { mean, std }
@@ -388,7 +392,10 @@ impl TransformerForecaster {
             encoder,
             positional_encoding,
             config,
-            normalization: NormalizationParams { mean: 0.0, std: 1.0 },
+            normalization: NormalizationParams {
+                mean: 0.0,
+                std: 1.0,
+            },
             training_history: None,
         })
     }
@@ -433,7 +440,8 @@ impl TransformerForecaster {
         }
 
         // Normalize input
-        let normalized: Vec<f64> = input_sequence.iter()
+        let normalized: Vec<f64> = input_sequence
+            .iter()
             .map(|&x| self.normalization.normalize(x))
             .collect();
 
@@ -441,7 +449,8 @@ impl TransformerForecaster {
         let prediction = vec![normalized[normalized.len() - 1]];
 
         // Denormalize
-        let denormalized: Vec<f64> = prediction.iter()
+        let denormalized: Vec<f64> = prediction
+            .iter()
             .map(|&x| self.normalization.denormalize(x))
             .collect();
 
@@ -461,6 +470,53 @@ impl TransformerForecaster {
     pub fn get_feature_importance(&self, sequence_length: usize) -> Vec<f32> {
         // Uniform importance for placeholder
         vec![1.0 / sequence_length as f32; sequence_length]
+    }
+}
+
+impl ForecastingModel for TransformerForecaster {
+    fn model_name(&self) -> &'static str {
+        "Transformer"
+    }
+
+    fn input_sequence_length(&self) -> usize {
+        self.config.sequence_length
+    }
+
+    fn forecast_window(&self, input: &[f64], horizon: usize) -> MLResult<Vec<f64>> {
+        let mut forecast = self.forecast(input)?;
+        if horizon == 0 {
+            forecast.clear();
+            return Ok(forecast);
+        }
+
+        if forecast.len() >= horizon {
+            forecast.truncate(horizon);
+            return Ok(forecast);
+        }
+
+        let extension_value = *forecast.last().unwrap_or(&0.0);
+        while forecast.len() < horizon {
+            forecast.push(extension_value);
+        }
+
+        Ok(forecast)
+    }
+
+    fn supports_gradients(&self) -> bool {
+        true
+    }
+
+    fn compute_input_gradients(&self, series: &TimeSeries) -> MLResult<Vec<f64>> {
+        self.finite_difference_gradients(series, 1e-4)
+    }
+
+    fn supports_attention(&self) -> bool {
+        true
+    }
+
+    fn attention_analysis(&self, series: &TimeSeries) -> MLResult<AttentionAnalysis> {
+        let window = self.prepare_input_window(series)?;
+        Ok(self.analyze_attention(window.len()))
     }
 }
 

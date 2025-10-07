@@ -3,16 +3,17 @@
 //! This module provides LSTM and GRU implementations optimized for time series analysis,
 //! including sequence-to-sequence and sequence-to-one architectures with GPU acceleration.
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::ml::{MLError, MLResult};
+use crate::ml::interfaces::ForecastingModel;
+use crate::ml::tensor::{DataType, Shape, Tensor, TensorOps};
 use crate::ml::types::{
-    NeuralNetwork, Layer, TrainingConfig, Device, OptimizerType,
-    LossFunction, TrainingHistory, EpochMetrics, ActivationType,
+    ActivationType, Device, EpochMetrics, Layer, LossFunction, NeuralNetwork, OptimizerType,
+    TrainingConfig, TrainingHistory,
 };
-use crate::ml::tensor::{Tensor, TensorOps, Shape, DataType};
+use crate::ml::{MLError, MLResult};
 use crate::timeseries::TimeSeries;
 
 // ============================================================================
@@ -159,7 +160,9 @@ impl TimeSeriesDataset {
         }
 
         if train_ratio + val_ratio >= 1.0 {
-            return Err(MLError::invalid_input("train_ratio + val_ratio must be < 1.0"));
+            return Err(MLError::invalid_input(
+                "train_ratio + val_ratio must be < 1.0",
+            ));
         }
 
         let data_len = ts.values.len();
@@ -178,7 +181,8 @@ impl TimeSeriesDataset {
 
         for i in 0..=(data_len - sequence_length - horizon) {
             let seq: Vec<f64> = ts.values[i..i + sequence_length].to_vec();
-            let target: Vec<f64> = ts.values[i + sequence_length..i + sequence_length + horizon].to_vec();
+            let target: Vec<f64> =
+                ts.values[i + sequence_length..i + sequence_length + horizon].to_vec();
 
             sequences.push(seq);
             targets.push(target);
@@ -206,10 +210,16 @@ impl TimeSeriesDataset {
 
     /// Get training data
     pub fn train_data(&self) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
-        let seqs: Vec<Vec<f64>> = self.split_info.train_indices.iter()
+        let seqs: Vec<Vec<f64>> = self
+            .split_info
+            .train_indices
+            .iter()
             .map(|&i| self.sequences[i].clone())
             .collect();
-        let tgts: Vec<Vec<f64>> = self.split_info.train_indices.iter()
+        let tgts: Vec<Vec<f64>> = self
+            .split_info
+            .train_indices
+            .iter()
             .map(|&i| self.targets[i].clone())
             .collect();
         (seqs, tgts)
@@ -217,10 +227,16 @@ impl TimeSeriesDataset {
 
     /// Get validation data
     pub fn validation_data(&self) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
-        let seqs: Vec<Vec<f64>> = self.split_info.validation_indices.iter()
+        let seqs: Vec<Vec<f64>> = self
+            .split_info
+            .validation_indices
+            .iter()
             .map(|&i| self.sequences[i].clone())
             .collect();
-        let tgts: Vec<Vec<f64>> = self.split_info.validation_indices.iter()
+        let tgts: Vec<Vec<f64>> = self
+            .split_info
+            .validation_indices
+            .iter()
             .map(|&i| self.targets[i].clone())
             .collect();
         (seqs, tgts)
@@ -228,10 +244,16 @@ impl TimeSeriesDataset {
 
     /// Get test data
     pub fn test_data(&self) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
-        let seqs: Vec<Vec<f64>> = self.split_info.test_indices.iter()
+        let seqs: Vec<Vec<f64>> = self
+            .split_info
+            .test_indices
+            .iter()
             .map(|&i| self.sequences[i].clone())
             .collect();
-        let tgts: Vec<Vec<f64>> = self.split_info.test_indices.iter()
+        let tgts: Vec<Vec<f64>> = self
+            .split_info
+            .test_indices
+            .iter()
             .map(|&i| self.targets[i].clone())
             .collect();
         (seqs, tgts)
@@ -268,9 +290,7 @@ impl NormalizationParams {
     /// Compute normalization parameters from data
     pub fn from_data(data: &[f64], method: NormalizationMethod) -> Self {
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / data.len() as f64;
+        let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
         let std = variance.sqrt();
         let min = data.iter().cloned().fold(f64::INFINITY, f64::min);
         let max = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -369,13 +389,11 @@ impl LSTMForecaster {
         let hidden_size = config.hidden_size;
         let output_size = config.output_size;
 
-        let mut layers = vec![
-            Layer::LSTM {
-                input_size,
-                hidden_size,
-                num_layers: config.num_layers,
-            },
-        ];
+        let mut layers = vec![Layer::LSTM {
+            input_size,
+            hidden_size,
+            num_layers: config.num_layers,
+        }];
 
         if config.dropout_rate > 0.0 {
             layers.push(Layer::Dropout {
@@ -398,7 +416,8 @@ impl LSTMForecaster {
                 epsilon: 1e-8,
             },
             LossFunction::MSE,
-        ).with_device(device);
+        )
+        .with_device(device);
 
         Self {
             network,
@@ -423,14 +442,13 @@ impl LSTMForecaster {
     ) -> MLResult<TrainingHistory> {
         // Compute normalization parameters from training data
         let (train_sequences, _) = dataset.train_data();
-        let all_values: Vec<f64> = train_sequences.iter()
+        let all_values: Vec<f64> = train_sequences
+            .iter()
             .flat_map(|seq| seq.iter().cloned())
             .collect();
 
-        self.normalization = NormalizationParams::from_data(
-            &all_values,
-            NormalizationMethod::ZScore,
-        );
+        self.normalization =
+            NormalizationParams::from_data(&all_values, NormalizationMethod::ZScore);
 
         // Training would happen here using candle-nn
         // For now, return a placeholder history
@@ -472,7 +490,8 @@ impl LSTMForecaster {
         }
 
         // Normalize input
-        let normalized: Vec<f64> = input_sequence.iter()
+        let normalized: Vec<f64> = input_sequence
+            .iter()
             .map(|&x| self.normalization.normalize(x))
             .collect();
 
@@ -480,7 +499,8 @@ impl LSTMForecaster {
         let prediction = vec![normalized[normalized.len() - 1]]; // Simple persistence forecast
 
         // Denormalize output
-        let denormalized: Vec<f64> = prediction.iter()
+        let denormalized: Vec<f64> = prediction
+            .iter()
             .map(|&x| self.normalization.denormalize(x))
             .collect();
 
@@ -507,6 +527,44 @@ pub struct GRUForecaster {
     pub training_stats: TrainingStats,
 }
 
+impl ForecastingModel for LSTMForecaster {
+    fn model_name(&self) -> &'static str {
+        "LSTM"
+    }
+
+    fn input_sequence_length(&self) -> usize {
+        self.sequence_length
+    }
+
+    fn forecast_window(&self, input: &[f64], horizon: usize) -> MLResult<Vec<f64>> {
+        let mut forecast = self.forecast(input)?;
+        if horizon == 0 {
+            forecast.clear();
+            return Ok(forecast);
+        }
+
+        if forecast.len() >= horizon {
+            forecast.truncate(horizon);
+            return Ok(forecast);
+        }
+
+        let extension_value = *forecast.last().unwrap_or(&0.0);
+        while forecast.len() < horizon {
+            forecast.push(extension_value);
+        }
+
+        Ok(forecast)
+    }
+
+    fn supports_gradients(&self) -> bool {
+        true
+    }
+
+    fn compute_input_gradients(&self, series: &TimeSeries) -> MLResult<Vec<f64>> {
+        self.finite_difference_gradients(series, 1e-4)
+    }
+}
+
 impl GRUForecaster {
     /// Create a new GRU forecaster
     pub fn new(config: &GRUConfig, device: Device) -> Self {
@@ -514,13 +572,11 @@ impl GRUForecaster {
         let hidden_size = config.hidden_size;
         let output_size = config.output_size;
 
-        let mut layers = vec![
-            Layer::GRU {
-                input_size,
-                hidden_size,
-                num_layers: config.num_layers,
-            },
-        ];
+        let mut layers = vec![Layer::GRU {
+            input_size,
+            hidden_size,
+            num_layers: config.num_layers,
+        }];
 
         if config.dropout_rate > 0.0 {
             layers.push(Layer::Dropout {
@@ -543,7 +599,8 @@ impl GRUForecaster {
                 epsilon: 1e-8,
             },
             LossFunction::MSE,
-        ).with_device(device);
+        )
+        .with_device(device);
 
         Self {
             network,
@@ -568,14 +625,13 @@ impl GRUForecaster {
     ) -> MLResult<TrainingHistory> {
         // Compute normalization parameters from training data
         let (train_sequences, _) = dataset.train_data();
-        let all_values: Vec<f64> = train_sequences.iter()
+        let all_values: Vec<f64> = train_sequences
+            .iter()
             .flat_map(|seq| seq.iter().cloned())
             .collect();
 
-        self.normalization = NormalizationParams::from_data(
-            &all_values,
-            NormalizationMethod::ZScore,
-        );
+        self.normalization =
+            NormalizationParams::from_data(&all_values, NormalizationMethod::ZScore);
 
         // Training would happen here using candle-nn
         // For now, return a placeholder history
@@ -617,7 +673,8 @@ impl GRUForecaster {
         }
 
         // Normalize input
-        let normalized: Vec<f64> = input_sequence.iter()
+        let normalized: Vec<f64> = input_sequence
+            .iter()
             .map(|&x| self.normalization.normalize(x))
             .collect();
 
@@ -625,11 +682,50 @@ impl GRUForecaster {
         let prediction = vec![normalized[normalized.len() - 1]]; // Simple persistence forecast
 
         // Denormalize output
-        let denormalized: Vec<f64> = prediction.iter()
+        let denormalized: Vec<f64> = prediction
+            .iter()
             .map(|&x| self.normalization.denormalize(x))
             .collect();
 
         Ok(denormalized)
+    }
+}
+
+impl ForecastingModel for GRUForecaster {
+    fn model_name(&self) -> &'static str {
+        "GRU"
+    }
+
+    fn input_sequence_length(&self) -> usize {
+        self.sequence_length
+    }
+
+    fn forecast_window(&self, input: &[f64], horizon: usize) -> MLResult<Vec<f64>> {
+        let mut forecast = self.forecast(input)?;
+        if horizon == 0 {
+            forecast.clear();
+            return Ok(forecast);
+        }
+
+        if forecast.len() >= horizon {
+            forecast.truncate(horizon);
+            return Ok(forecast);
+        }
+
+        let extension_value = *forecast.last().unwrap_or(&0.0);
+        while forecast.len() < horizon {
+            forecast.push(extension_value);
+        }
+
+        Ok(forecast)
+    }
+
+    fn supports_gradients(&self) -> bool {
+        true
+    }
+
+    fn compute_input_gradients(&self, series: &TimeSeries) -> MLResult<Vec<f64>> {
+        self.finite_difference_gradients(series, 1e-4)
     }
 }
 
@@ -650,7 +746,7 @@ pub fn create_lstm_forecaster(
         training_data,
         config.sequence_length,
         config.output_size,
-        0.7, // 70% training
+        0.7,  // 70% training
         0.15, // 15% validation
     )?;
 
@@ -674,7 +770,7 @@ pub fn create_gru_forecaster(
         training_data,
         config.sequence_length,
         config.output_size,
-        0.7, // 70% training
+        0.7,  // 70% training
         0.15, // 15% validation
     )?;
 
