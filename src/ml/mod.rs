@@ -14,6 +14,7 @@ pub mod recurrent;
 pub mod transformer;
 pub mod ensemble;
 pub mod automl;
+pub mod interfaces;
 
 // Re-export commonly used types
 pub use types::{
@@ -114,6 +115,8 @@ pub use automl::{
     auto_optimize_model, optimize_hyperparameters, search_neural_architecture,
     auto_configure_ensemble,
 };
+
+pub use interfaces::{ForecastingModel, ModelCapabilities};
 
 /// Result type for ML operations
 pub type MLResult<T> = Result<T, MLError>;
