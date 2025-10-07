@@ -506,7 +506,7 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
             }
         },
 
-        ConfigAction::Set { key, value, config, profile } => {
+        ConfigAction::Set { key, value, config: _config, profile: _profile } => {
             if !global_opts.quiet {
                 println!("{}", format!("🔧 Setting configuration: {} = {}", key, value).cyan().bold());
             }
@@ -524,13 +524,13 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
             }
         },
 
-        ConfigAction::Get { key, config, profile } => {
+        ConfigAction::Get { key, config: _config, profile } => {
             if !global_opts.quiet {
                 println!("{}", format!("🔍 Getting configuration value: {}", key).cyan().bold());
             }
 
             let loader = ConfigLoader::new();
-            let config = if let Some(profile_name) = profile {
+            let _config = if let Some(profile_name) = profile {
                 loader.load_profile(profile_name)?
             } else {
                 loader.load()?
@@ -546,7 +546,7 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
             }
         },
 
-        ConfigAction::Profiles { detailed, config } => {
+        ConfigAction::Profiles { detailed, config: _config } => {
             if !global_opts.quiet {
                 println!("{}", "📋 Available Profiles".cyan().bold());
             }
@@ -573,7 +573,7 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
             }
         },
 
-        ConfigAction::Profile { name, config } => {
+        ConfigAction::Profile { name, config: _config } => {
             if !global_opts.quiet {
                 println!("{}", format!("🔄 Switching to profile: {}", name).cyan().bold());
             }
@@ -591,7 +591,7 @@ pub fn execute_config(cmd: ConfigCommand, global_opts: &Cli) -> Result<()> {
             }
         },
 
-        ConfigAction::Validate { config, profile, verbose } => {
+        ConfigAction::Validate { config: _config, profile, verbose } => {
             if !global_opts.quiet {
                 println!("{}", "🔍 Validating configuration...".cyan().bold());
             }

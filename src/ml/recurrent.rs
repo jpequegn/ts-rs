@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::ml::interfaces::ForecastingModel;
-use crate::ml::tensor::{DataType, Shape, Tensor, TensorOps};
 use crate::ml::types::{
     ActivationType, Device, EpochMetrics, Layer, LossFunction, NeuralNetwork, OptimizerType,
     TrainingConfig, TrainingHistory,

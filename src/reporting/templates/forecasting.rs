@@ -35,7 +35,7 @@ impl ReportTemplateImpl for ForecastingTemplate {
         content.push_str("\n");
 
         // Forecast Results
-        if let Some(ref forecast) = analysis_data.forecasting {
+        if let Some(ref _forecast) = analysis_data.forecasting {
             content.push_str("## Forecast Results\n\n");
             content.push_str("[Forecast results would be displayed here]\n\n");
         } else {
@@ -88,7 +88,7 @@ impl ReportTemplateImpl for ForecastingTemplate {
             }
         }
 
-        if let Some(ref seasonality) = analysis_data.seasonality {
+        if let Some(ref _seasonality) = analysis_data.seasonality {
             content.push_str("- Seasonality analysis available: Review for seasonal patterns\n");
         }
 

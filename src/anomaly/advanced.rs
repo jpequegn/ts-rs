@@ -104,7 +104,7 @@ pub fn detect_lof_anomalies(
     let mut lof_scores: Vec<(usize, f64)> = Vec::new();
 
     // Calculate LOF for each point
-    for (i, &(original_idx, value, _)) in valid_data.iter().enumerate() {
+    for (_i, &(original_idx, value, _)) in valid_data.iter().enumerate() {
         // Find k-nearest neighbors
         let mut distances: Vec<(usize, f64)> = values
             .iter()
@@ -118,7 +118,7 @@ pub fn detect_lof_anomalies(
         let neighbors: Vec<(usize, f64)> = distances.into_iter().take(n_neighbors + 1).collect();
 
         // Calculate k-distance (distance to k-th neighbor)
-        let k_distance = neighbors[n_neighbors].1;
+        let _k_distance = neighbors[n_neighbors].1;
 
         // Calculate reachability distance
         let mut reachability_distances = Vec::new();

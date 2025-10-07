@@ -396,7 +396,7 @@ impl InsightEngine {
     fn generate_seasonality_insights(&self, analysis_data: &AnalysisData) -> Result<Vec<Insight>> {
         let mut insights = Vec::new();
 
-        if let Some(ref seasonality) = analysis_data.seasonality {
+        if let Some(ref _seasonality) = analysis_data.seasonality {
             // Add seasonality insights based on the seasonality analysis
             // This would be implemented based on the actual seasonality analysis structure
             insights.push(Insight {
@@ -459,7 +459,7 @@ impl InsightEngine {
     fn generate_forecasting_insights(&self, analysis_data: &AnalysisData) -> Result<Vec<Insight>> {
         let mut insights = Vec::new();
 
-        if let Some(ref forecast) = analysis_data.forecasting {
+        if let Some(ref _forecast) = analysis_data.forecasting {
             // Add forecasting insights based on the forecast results
             // This would be implemented based on the actual forecasting result structure
             insights.push(Insight {

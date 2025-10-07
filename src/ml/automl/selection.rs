@@ -8,7 +8,6 @@
 
 use super::types::*;
 use crate::timeseries::TimeSeries;
-use crate::ml::MLResult;
 use std::collections::HashMap;
 
 // ================================================================================================

@@ -102,7 +102,7 @@ impl NeuralArchitectureSearch {
 
         for _gen in 0..generations {
             // Evaluate fitness
-            let mut fitness: Vec<_> = population
+            let fitness: Vec<_> = population
                 .iter()
                 .map(|arch| self.estimate_performance(arch))
                 .collect();

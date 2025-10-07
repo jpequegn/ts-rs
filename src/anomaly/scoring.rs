@@ -11,7 +11,7 @@ use chrono::{Timelike, Datelike};
 /// Combine and score anomalies from multiple detection methods
 pub fn combine_and_score_anomalies(
     all_anomalies: Vec<Anomaly>,
-    method_results: &HashMap<String, Vec<Anomaly>>,
+    _method_results: &HashMap<String, Vec<Anomaly>>,
     config: &ScoringConfig,
 ) -> Result<Vec<Anomaly>, Box<dyn std::error::Error>> {
     if all_anomalies.is_empty() {
@@ -27,7 +27,7 @@ pub fn combine_and_score_anomalies(
 
     let mut combined_anomalies = Vec::new();
 
-    for (index, anomalies) in anomaly_groups {
+    for (_index, anomalies) in anomaly_groups {
         let combined_anomaly = match config.method {
             ScoringMethod::Maximum => combine_using_maximum(anomalies)?,
             ScoringMethod::WeightedAverage => combine_using_weighted_average(anomalies, &config.method_weights)?,
@@ -190,7 +190,7 @@ fn combine_using_maximum(anomalies: Vec<Anomaly>) -> Result<Anomaly, Box<dyn std
 /// Combine anomalies using weighted average
 fn combine_using_weighted_average(
     anomalies: Vec<Anomaly>,
-    weights: &HashMap<String, f64>,
+    _weights: &HashMap<String, f64>,
 ) -> Result<Anomaly, Box<dyn std::error::Error>> {
     if anomalies.is_empty() {
         return Err("No anomalies to combine".into());

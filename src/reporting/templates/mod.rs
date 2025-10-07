@@ -60,7 +60,7 @@ pub fn render_template(
         crate::reporting::types::ReportTemplate::Forecasting => {
             forecasting::render_template(analysis_data, insights, config)
         },
-        crate::reporting::types::ReportTemplate::Custom { name, sections } => {
+        crate::reporting::types::ReportTemplate::Custom { name: _name, sections: _sections } => {
             // For custom templates, use technical template as base
             // In a full implementation, this would support custom section rendering
             technical::render_template(analysis_data, insights, config)

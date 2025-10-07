@@ -6,7 +6,6 @@
 //! - Resource-aware stopping criteria
 
 use super::types::*;
-use crate::ml::MLResult;
 
 // ================================================================================================
 // Early Stopping Manager

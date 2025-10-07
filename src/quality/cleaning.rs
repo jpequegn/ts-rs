@@ -769,7 +769,7 @@ pub fn clean_timeseries(
 
     let mut cleaned_data = data.clone();
     let mut report = CleaningReport::default();
-    let mut all_modifications = Vec::new();
+    let all_modifications = Vec::new();
 
     // Check if we can make modifications
     let max_mods = (data.len() as f64 * config.max_modifications) as usize;

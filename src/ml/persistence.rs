@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use crate::ml::{MLError, MLResult};
-use crate::ml::types::{NeuralNetwork, ModelMetadata, TrainingHistory};
+use crate::ml::types::{NeuralNetwork, TrainingHistory};
 
 /// Model serialization format
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
