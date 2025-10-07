@@ -15,6 +15,7 @@ pub mod transformer;
 pub mod ensemble;
 pub mod automl;
 pub mod interfaces;
+pub mod embeddings;
 
 // Re-export commonly used types
 pub use types::{
@@ -117,6 +118,26 @@ pub use automl::{
 };
 
 pub use interfaces::{ForecastingModel, ModelCapabilities};
+
+pub use embeddings::{
+    // Core types
+    EmbeddingType, EmbeddingConfig, EmbeddingModel, EmbeddingResult,
+    EmbeddingMetadata, EmbeddingTrainingConfig,
+
+    // Normalization and features
+    NormalizationType, FeatureExtractionConfig,
+
+    // Similarity types
+    SimilarityMethod, SimilarityResult, AlignmentInfo,
+    SpectralMethod, WaveletType,
+
+    // Encoder trait
+    TimeSeriesEncoder,
+
+    // Core functions
+    create_time_series_embeddings, compute_time_series_similarity,
+    find_similar_time_series,
+};
 
 /// Result type for ML operations
 pub type MLResult<T> = Result<T, MLError>;
