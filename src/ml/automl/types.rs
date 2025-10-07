@@ -757,7 +757,7 @@ pub struct TemporalFeatures {
 }
 
 /// Complexity features
-##[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplexityFeatures {
     pub entropy: f64,
     pub lempel_ziv_complexity: f64,
