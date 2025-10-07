@@ -16,6 +16,7 @@ pub mod ensemble;
 pub mod automl;
 pub mod interfaces;
 pub mod embeddings;
+pub mod interpretability;
 
 // Re-export commonly used types
 pub use types::{
@@ -140,6 +141,32 @@ pub use embeddings::{
     // Core functions
     create_time_series_embeddings, compute_time_series_similarity,
     find_similar_time_series,
+};
+
+pub use interpretability::{
+    // Core explanation types
+    ModelExplanation, ExplanationConfig, ExplanationMethod,
+    BaselineStrategy, PerturbationConfig,
+
+    // Feature importance
+    FeatureImportance, ImportanceMethod, TemporalImportance,
+    InteractionMatrix,
+
+    // Counterfactuals
+    CounterfactualExplanation, CounterfactualConfig,
+    CounterfactualSearch, CounterfactualConstraints,
+    FeatureChange, DistanceMetric,
+
+    // Confidence and uncertainty
+    ConfidenceExplanation, UncertaintySource, UncertaintyType,
+    ExplanationMetadata,
+
+    // Attention analysis
+    AttentionInsights,
+
+    // Core functions
+    explain_model_prediction, compute_feature_importance,
+    analyze_attention_patterns,
 };
 
 /// Result type for ML operations
