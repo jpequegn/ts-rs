@@ -1,11 +1,11 @@
 //! Integration tests for the performance optimization system
 
-use chronos::*;
-use chronos::performance::*;
+use chrono::{DateTime, Utc};
 use chronos::config::PerformanceConfig;
+use chronos::performance::*;
+use chronos::*;
 use std::time::Duration;
 use tempfile::TempDir;
-use chrono::{DateTime, Utc};
 
 fn create_test_config() -> PerformanceConfig {
     PerformanceConfig {
@@ -45,7 +45,9 @@ async fn test_memory_optimization() {
     let optimizer = PerformanceOptimizer::new(&config).expect("Failed to create optimizer");
 
     let mut ts = create_test_timeseries(1000);
-    optimizer.optimize_memory(&mut ts).expect("Memory optimization failed");
+    optimizer
+        .optimize_memory(&mut ts)
+        .expect("Memory optimization failed");
 
     let metrics = optimizer.get_metrics();
     assert!(metrics.memory_usage_mb > 0.0);
@@ -59,9 +61,11 @@ async fn test_parallel_processing() {
     let ts = create_test_timeseries(1000);
 
     // Test parallel computation
-    let result = optimizer.execute_parallel(&ts, |values| {
-        values.iter().map(|&x| x * 2.0).collect::<Vec<f64>>()
-    }).expect("Parallel execution failed");
+    let result = optimizer
+        .execute_parallel(&ts, |values| {
+            values.iter().map(|&x| x * 2.0).collect::<Vec<f64>>()
+        })
+        .expect("Parallel execution failed");
 
     assert_eq!(result.len(), 1000);
     assert_eq!(result[0], ts.values()[0] * 2.0);
@@ -76,7 +80,9 @@ async fn test_caching_system() {
     let test_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
     // Test cache operations
-    optimizer.cache_result("test_key", &test_data).expect("Cache set failed");
+    optimizer
+        .cache_result("test_key", &test_data)
+        .expect("Cache set failed");
 
     let cached: Option<Vec<f64>> = optimizer.get_cached("test_key");
     assert_eq!(cached, Some(test_data));
@@ -96,9 +102,13 @@ async fn test_database_integration() {
     let ts = create_test_timeseries(100);
 
     // Test database operations
-    optimizer.store_large_dataset("test_series", &ts).expect("Database store failed");
+    optimizer
+        .store_large_dataset("test_series", &ts)
+        .expect("Database store failed");
 
-    let loaded = optimizer.load_large_dataset("test_series").expect("Database load failed");
+    let loaded = optimizer
+        .load_large_dataset("test_series")
+        .expect("Database load failed");
     assert!(loaded.is_some());
 
     let loaded_ts = loaded.unwrap();
@@ -111,13 +121,15 @@ async fn test_progress_tracking() {
     let optimizer = PerformanceOptimizer::new(&config).expect("Failed to create optimizer");
 
     // Test progress-aware operation
-    let result = optimizer.execute_with_progress("test_operation", 100, |progress| {
-        for i in 0..100 {
-            progress.inc();
-            std::thread::sleep(Duration::from_millis(1));
-        }
-        Ok(42)
-    }).expect("Progress operation failed");
+    let result = optimizer
+        .execute_with_progress("test_operation", 100, |progress| {
+            for i in 0..100 {
+                progress.inc();
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            Ok(42)
+        })
+        .expect("Progress operation failed");
 
     assert_eq!(result, 42);
 }
@@ -130,7 +142,9 @@ async fn test_comprehensive_optimization() {
     let mut ts = create_test_timeseries(2000);
 
     // Run comprehensive optimization
-    optimizer.optimize_comprehensive(&mut ts).expect("Comprehensive optimization failed");
+    optimizer
+        .optimize_comprehensive(&mut ts)
+        .expect("Comprehensive optimization failed");
 
     let metrics = optimizer.get_metrics();
     assert!(metrics.memory_usage_mb > 0.0);
@@ -145,9 +159,9 @@ async fn test_performance_metrics() {
     let ts = create_test_timeseries(1000);
 
     // Perform some operations to generate metrics
-    optimizer.execute_parallel(&ts, |values| {
-        values.iter().sum::<f64>()
-    }).expect("Parallel operation failed");
+    optimizer
+        .execute_parallel(&ts, |values| values.iter().sum::<f64>())
+        .expect("Parallel operation failed");
 
     let metrics = optimizer.get_metrics();
     assert!(metrics.total_operations > 0);
@@ -174,7 +188,9 @@ async fn test_memory_pressure_handling() {
 #[tokio::test]
 async fn test_concurrent_operations() {
     let config = create_test_config();
-    let optimizer = std::sync::Arc::new(PerformanceOptimizer::new(&config).expect("Failed to create optimizer"));
+    let optimizer = std::sync::Arc::new(
+        PerformanceOptimizer::new(&config).expect("Failed to create optimizer"),
+    );
 
     let mut handles = vec![];
 

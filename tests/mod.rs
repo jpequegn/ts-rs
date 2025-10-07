@@ -36,11 +36,11 @@
 //! - Real-world reference datasets
 //! - Edge case datasets
 
-pub mod unit;
+pub mod data;
 pub mod integration;
 pub mod property_based;
 pub mod statistical_validation;
-pub mod data;
+pub mod unit;
 
 // Re-export commonly used testing utilities
 pub use data::synthetic_generators::*;
@@ -87,7 +87,7 @@ mod comprehensive_test_runner {
 
 /// Testing utilities and helpers
 pub mod utils {
-    use chrono::{DateTime, Utc, TimeZone};
+    use chrono::{DateTime, TimeZone, Utc};
     use chronos::TimeSeries;
 
     /// Create a simple test time series for quick testing
@@ -102,12 +102,21 @@ pub mod utils {
 
     /// Assert that two floating point values are approximately equal
     pub fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
-        assert!((a - b).abs() < epsilon, "Values not approximately equal: {} vs {}", a, b);
+        assert!(
+            (a - b).abs() < epsilon,
+            "Values not approximately equal: {} vs {}",
+            a,
+            b
+        );
     }
 
     /// Assert that a statistical test result is valid
     pub fn assert_valid_p_value(p_value: f64) {
-        assert!(p_value >= 0.0 && p_value <= 1.0, "Invalid p-value: {}", p_value);
+        assert!(
+            p_value >= 0.0 && p_value <= 1.0,
+            "Invalid p-value: {}",
+            p_value
+        );
         assert!(p_value.is_finite(), "P-value must be finite: {}", p_value);
     }
 }

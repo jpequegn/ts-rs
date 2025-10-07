@@ -1,9 +1,9 @@
 //! Unit tests for progress tracking module
 
-use chronos::performance::progress::*;
 use chronos::config::PerformanceConfig;
-use std::time::Duration;
+use chronos::performance::progress::*;
 use std::thread;
+use std::time::Duration;
 
 fn create_test_config() -> PerformanceConfig {
     PerformanceConfig {
@@ -147,7 +147,10 @@ fn test_progress_tracker_active_operations() {
     assert_eq!(operations.len(), 2);
 
     // Verify operation details
-    let op1 = operations.iter().find(|op| op.name == "operation1").unwrap();
+    let op1 = operations
+        .iter()
+        .find(|op| op.name == "operation1")
+        .unwrap();
     assert_eq!(op1.progress_percentage, 0.0);
     assert!(op1.is_cancellable);
     assert!(!op1.is_cancelled);
@@ -155,7 +158,10 @@ fn test_progress_tracker_active_operations() {
     // Update progress and check again
     pb1.set_position(50);
     let operations = tracker.get_active_operations();
-    let op1 = operations.iter().find(|op| op.name == "operation1").unwrap();
+    let op1 = operations
+        .iter()
+        .find(|op| op.name == "operation1")
+        .unwrap();
     assert_eq!(op1.progress_percentage, 50.0);
 }
 
@@ -171,7 +177,10 @@ fn test_progress_tracker_cancellation() {
     assert!(!tracker.cancel_operation("nonexistent_operation"));
 
     let operations = tracker.get_active_operations();
-    let op = operations.iter().find(|op| op.name == "cancellable_operation").unwrap();
+    let op = operations
+        .iter()
+        .find(|op| op.name == "cancellable_operation")
+        .unwrap();
     assert!(op.is_cancelled);
 }
 
@@ -213,9 +222,7 @@ fn test_progress_aware_execution_failure() {
     let config = create_test_config();
     let tracker = ProgressTracker::new(&config).expect("Failed to create progress tracker");
 
-    let result = tracker.execute_with_progress("failing_task", 10, |_pb| {
-        Err("Task failed".into())
-    });
+    let result = tracker.execute_with_progress("failing_task", 10, |_pb| Err("Task failed".into()));
 
     assert!(result.is_err());
 }
@@ -319,7 +326,7 @@ fn test_progress_cleanup_completed() {
 fn test_concurrent_progress_operations() {
     let config = create_test_config();
     let tracker = std::sync::Arc::new(
-        ProgressTracker::new(&config).expect("Failed to create progress tracker")
+        ProgressTracker::new(&config).expect("Failed to create progress tracker"),
     );
 
     let mut handles = vec![];

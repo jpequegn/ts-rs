@@ -1,6 +1,6 @@
+use chrono::{DateTime, TimeZone, Utc};
 use chronos::ml::automl::*;
 use chronos::timeseries::TimeSeries;
-use chrono::{DateTime, Utc, TimeZone};
 use std::collections::HashMap;
 
 /// Create test time series
@@ -34,8 +34,12 @@ fn test_search_space_creation() {
         conditional_params: vec![],
     };
 
-    search_space.integer_params.insert("hidden_size".to_string(), (32, 256));
-    search_space.float_params.insert("learning_rate".to_string(), (0.0001, 0.1));
+    search_space
+        .integer_params
+        .insert("hidden_size".to_string(), (32, 256));
+    search_space
+        .float_params
+        .insert("learning_rate".to_string(), (0.0001, 0.1));
 
     assert_eq!(search_space.integer_params.len(), 1);
     assert_eq!(search_space.float_params.len(), 1);
@@ -52,8 +56,12 @@ fn test_random_search_basic() {
         conditional_params: vec![],
     };
 
-    search_space.integer_params.insert("hidden_size".to_string(), (32, 128));
-    search_space.float_params.insert("learning_rate".to_string(), (0.001, 0.1));
+    search_space
+        .integer_params
+        .insert("hidden_size".to_string(), (32, 128));
+    search_space
+        .float_params
+        .insert("learning_rate".to_string(), (0.001, 0.1));
 
     let mut optimizer = RandomSearchOptimizer::new(10);
 
@@ -75,7 +83,9 @@ fn test_grid_search_basic() {
         conditional_params: vec![],
     };
 
-    search_space.integer_params.insert("param1".to_string(), (1, 3));
+    search_space
+        .integer_params
+        .insert("param1".to_string(), (1, 3));
 
     let optimizer = GridSearchOptimizer::new(2);
     let grid = optimizer.generate_grid(&search_space);
@@ -92,7 +102,9 @@ fn test_bayesian_optimizer_creation() {
     let search_space = SearchSpace {
         categorical_params: HashMap::new(),
         integer_params: vec![("param1".to_string(), (1, 10))].into_iter().collect(),
-        float_params: vec![("param2".to_string(), (0.0, 1.0))].into_iter().collect(),
+        float_params: vec![("param2".to_string(), (0.0, 1.0))]
+            .into_iter()
+            .collect(),
         conditional_params: vec![],
     };
 
@@ -158,7 +170,7 @@ fn test_dataset_feature_extraction() {
 
 #[test]
 fn test_model_selector_creation() {
-    use chronos::ml::automl::selection::{ModelSelector, create_default_candidates};
+    use chronos::ml::automl::selection::{create_default_candidates, ModelSelector};
 
     let candidates = create_default_candidates();
     assert_eq!(candidates.len(), 3); // LSTM, GRU, Transformer
@@ -176,7 +188,7 @@ fn test_model_selector_creation() {
 
 #[test]
 fn test_model_ranking() {
-    use chronos::ml::automl::selection::{ModelSelector, create_default_candidates};
+    use chronos::ml::automl::selection::{create_default_candidates, ModelSelector};
 
     let ts = create_test_timeseries();
 
@@ -211,7 +223,7 @@ fn test_meta_learner_creation() {
 
 #[test]
 fn test_nas_random_search() {
-    use chronos::ml::automl::nas::{NeuralArchitectureSearch, NASStrategy};
+    use chronos::ml::automl::nas::{NASStrategy, NeuralArchitectureSearch};
 
     let ts = create_test_timeseries();
 
@@ -230,11 +242,7 @@ fn test_nas_random_search() {
         max_latency_ms: 100.0,
     };
 
-    let mut nas = NeuralArchitectureSearch::new(
-        search_space,
-        NASStrategy::Random,
-        constraints,
-    );
+    let mut nas = NeuralArchitectureSearch::new(search_space, NASStrategy::Random, constraints);
 
     // Should complete search
     let result = nas.search_architecture(&ts);
@@ -260,7 +268,9 @@ fn test_nsga2_optimizer_creation() {
 fn test_multi_objective_config() {
     let config = MultiObjectiveConfig {
         objectives: vec![
-            Objective::Accuracy { metric: AccuracyMetric::RMSE },
+            Objective::Accuracy {
+                metric: AccuracyMetric::RMSE,
+            },
             Objective::TrainingTime,
         ],
         optimization_method: MOOMethod::NSGA2 {

@@ -3,13 +3,13 @@
 //! This module provides generators for creating synthetic time series data
 //! with known statistical properties for comprehensive testing.
 
-use chronos::*;
-use chrono::{DateTime, Utc, TimeZone};
-use std::f64::consts::PI;
-use rand::{Rng, SeedableRng};
-use rand::rngs::StdRng;
-use chronos::trend::detection::detect_trend;
+use chrono::{DateTime, TimeZone, Utc};
 use chronos::stats::stationarity::test_stationarity;
+use chronos::trend::detection::detect_trend;
+use chronos::*;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use std::f64::consts::PI;
 
 /// Configuration for synthetic time series generation
 #[derive(Debug, Clone)]
@@ -34,7 +34,9 @@ impl Default for SyntheticConfig {
 /// Generate timestamps for time series
 fn generate_timestamps(config: &SyntheticConfig) -> Vec<DateTime<Utc>> {
     (0..config.size)
-        .map(|i| config.start_timestamp + chrono::Duration::hours(i as i64 * config.frequency_hours))
+        .map(|i| {
+            config.start_timestamp + chrono::Duration::hours(i as i64 * config.frequency_hours)
+        })
         .collect()
 }
 
@@ -158,7 +160,10 @@ pub fn generate_ar1_process(
     constant: f64,
     error_variance: f64,
 ) -> TimeSeries {
-    assert!(phi.abs() < 1.0, "AR(1) coefficient must be < 1 for stationarity");
+    assert!(
+        phi.abs() < 1.0,
+        "AR(1) coefficient must be < 1 for stationarity"
+    );
 
     let timestamps = generate_timestamps(&config);
 
@@ -183,11 +188,7 @@ pub fn generate_ar1_process(
 }
 
 /// Generate random walk (non-stationary)
-pub fn generate_random_walk(
-    config: SyntheticConfig,
-    step_size: f64,
-    drift: f64,
-) -> TimeSeries {
+pub fn generate_random_walk(config: SyntheticConfig, step_size: f64, drift: f64) -> TimeSeries {
     let timestamps = generate_timestamps(&config);
 
     let mut rng = if let Some(seed) = config.seed {
@@ -215,7 +216,11 @@ pub fn generate_changepoint_series(
     levels: Vec<f64>,
     noise_level: f64,
 ) -> TimeSeries {
-    assert_eq!(changepoints.len() + 1, levels.len(), "Need one more level than changepoints");
+    assert_eq!(
+        changepoints.len() + 1,
+        levels.len(),
+        "Need one more level than changepoints"
+    );
 
     let timestamps = generate_timestamps(&config);
 
@@ -228,7 +233,10 @@ pub fn generate_changepoint_series(
     let values: Vec<f64> = (0..config.size)
         .map(|i| {
             // Find which segment this point belongs to
-            let segment = changepoints.iter().position(|&cp| i < cp).unwrap_or(changepoints.len());
+            let segment = changepoints
+                .iter()
+                .position(|&cp| i < cp)
+                .unwrap_or(changepoints.len());
             let level = levels[segment];
 
             let noise = if noise_level > 0.0 {
@@ -263,7 +271,8 @@ pub fn generate_complex_series(
     let values: Vec<f64> = (0..config.size)
         .map(|i| {
             let trend = trend_slope * i as f64;
-            let seasonal = seasonal_amplitude * (2.0 * PI * (i % seasonal_period) as f64 / seasonal_period as f64).sin();
+            let seasonal = seasonal_amplitude
+                * (2.0 * PI * (i % seasonal_period) as f64 / seasonal_period as f64).sin();
             let noise = noise_level * (rng.gen::<f64>() - 0.5);
 
             trend + seasonal + noise
@@ -330,7 +339,8 @@ pub fn generate_volatility_clustering(
         values.push(return_value);
 
         // Update volatility (simplified GARCH)
-        volatility = base_volatility.sqrt() * (alpha * shock.powi(2) + beta * volatility.powi(2)).sqrt();
+        volatility =
+            base_volatility.sqrt() * (alpha * shock.powi(2) + beta * volatility.powi(2)).sqrt();
     }
 
     TimeSeries::new("volatility_clustering".to_string(), timestamps, values).unwrap()
@@ -342,7 +352,10 @@ pub fn generate_correlated_series(
     correlation: f64,
     series_count: usize,
 ) -> Vec<TimeSeries> {
-    assert!(correlation >= -1.0 && correlation <= 1.0, "Correlation must be between -1 and 1");
+    assert!(
+        correlation >= -1.0 && correlation <= 1.0,
+        "Correlation must be between -1 and 1"
+    );
     assert!(series_count >= 2, "Need at least 2 series for correlation");
 
     let timestamps = generate_timestamps(&config);
@@ -367,8 +380,8 @@ pub fn generate_correlated_series(
                 if i == 0 {
                     independent_series[0][j]
                 } else {
-                    correlation * independent_series[0][j] +
-                    (1.0 - correlation.powi(2)).sqrt() * independent_series[i][j]
+                    correlation * independent_series[0][j]
+                        + (1.0 - correlation.powi(2)).sqrt() * independent_series[i][j]
                 }
             })
             .collect();
@@ -377,7 +390,8 @@ pub fn generate_correlated_series(
             format!("correlated_series_{}", i),
             timestamps.clone(),
             values,
-        ).unwrap();
+        )
+        .unwrap();
 
         correlated_series.push(ts);
     }
@@ -424,7 +438,10 @@ mod generator_tests {
 
     #[test]
     fn test_ar1_stationarity() {
-        let config = SyntheticConfig { size: 500, ..Default::default() };
+        let config = SyntheticConfig {
+            size: 500,
+            ..Default::default()
+        };
         let ts = generate_ar1_process(config, 0.5, 0.0, 1.0);
 
         // AR(1) with |φ| < 1 should be stationary
@@ -434,7 +451,10 @@ mod generator_tests {
 
     #[test]
     fn test_random_walk_non_stationarity() {
-        let config = SyntheticConfig { size: 200, ..Default::default() };
+        let config = SyntheticConfig {
+            size: 200,
+            ..Default::default()
+        };
         let ts = generate_random_walk(config, 1.0, 0.0);
 
         // Random walk should be non-stationary

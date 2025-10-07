@@ -3,11 +3,11 @@
 //! This module tests complete CLI workflows including data import,
 //! analysis execution, and export functionality.
 
-use std::process::Command;
+use serial_test::serial;
 use std::fs;
 use std::path::Path;
-use tempfile::{TempDir, NamedTempFile};
-use serial_test::serial;
+use std::process::Command;
+use tempfile::{NamedTempFile, TempDir};
 
 /// Helper to run chronos CLI commands
 fn run_chronos_command(args: &[&str]) -> Result<std::process::Output, std::io::Error> {
@@ -28,7 +28,11 @@ fn create_sample_csv(content: &str) -> NamedTempFile {
 fn create_test_dataset() -> String {
     let mut csv_content = String::from("timestamp,value\n");
     for i in 0..100 {
-        csv_content.push_str(&format!("2023-01-01T{:02}:00:00Z,{}\n", i % 24, i as f64 + (i as f64 * 0.1).sin()));
+        csv_content.push_str(&format!(
+            "2023-01-01T{:02}:00:00Z,{}\n",
+            i % 24,
+            i as f64 + (i as f64 * 0.1).sin()
+        ));
     }
     csv_content
 }
@@ -73,11 +77,16 @@ mod import_export_workflow_tests {
 
         let output = run_chronos_command(&[
             "import",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Check command succeeded
         if !output.status.success() {
@@ -100,12 +109,18 @@ mod import_export_workflow_tests {
         // Run analysis with JSON export
         let output = run_chronos_command(&[
             "analyze",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--output", output_path.to_str().unwrap(),
-            "--format", "json",
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--output",
+            output_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .unwrap();
 
         // Check if output file was created
         if output.status.success() && output_path.exists() {
@@ -128,16 +143,26 @@ mod import_export_workflow_tests {
 
             let output = run_chronos_command(&[
                 "stats",
-                "--file", input_file.path().to_str().unwrap(),
-                "--time-column", "timestamp",
-                "--value-column", "value",
-                "--output", output_path.to_str().unwrap(),
-                "--format", format,
-            ]).unwrap();
+                "--file",
+                input_file.path().to_str().unwrap(),
+                "--time-column",
+                "timestamp",
+                "--value-column",
+                "value",
+                "--output",
+                output_path.to_str().unwrap(),
+                "--format",
+                format,
+            ])
+            .unwrap();
 
             // Command should not crash
             if !output.status.success() {
-                println!("Failed format {}: {}", format, String::from_utf8_lossy(&output.stderr));
+                println!(
+                    "Failed format {}: {}",
+                    format,
+                    String::from_utf8_lossy(&output.stderr)
+                );
             }
         }
     }
@@ -158,12 +183,17 @@ mod analysis_workflow_tests {
         // Run comprehensive analysis
         let output = run_chronos_command(&[
             "analyze",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
             "--comprehensive",
-            "--output-dir", output_dir.to_str().unwrap(),
-        ]).unwrap();
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should not crash
         if !output.status.success() {
@@ -181,12 +211,18 @@ mod analysis_workflow_tests {
 
         let output = run_chronos_command(&[
             "trend",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--method", "comprehensive",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--method",
+            "comprehensive",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should not crash
         if !output.status.success() {
@@ -204,11 +240,16 @@ mod analysis_workflow_tests {
 
         let output = run_chronos_command(&[
             "seasonal",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should not crash
         if !output.status.success() {
@@ -226,12 +267,18 @@ mod analysis_workflow_tests {
 
         let output = run_chronos_command(&[
             "anomaly",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--method", "statistical",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--method",
+            "statistical",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should not crash
         if !output.status.success() {
@@ -249,13 +296,20 @@ mod analysis_workflow_tests {
 
         let output = run_chronos_command(&[
             "forecast",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--horizon", "10",
-            "--method", "arima",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--horizon",
+            "10",
+            "--method",
+            "arima",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should not crash
         if !output.status.success() {
@@ -292,15 +346,21 @@ mod error_handling_tests {
     fn test_invalid_file_path() {
         let output = run_chronos_command(&[
             "import",
-            "--file", "/nonexistent/path/file.csv",
-            "--time-column", "timestamp",
-            "--value-column", "value",
-        ]).unwrap();
+            "--file",
+            "/nonexistent/path/file.csv",
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+        ])
+        .unwrap();
 
         // Should fail gracefully
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("file") || stderr.contains("not found") || stderr.contains("No such"));
+        assert!(
+            stderr.contains("file") || stderr.contains("not found") || stderr.contains("No such")
+        );
     }
 
     #[test]
@@ -311,10 +371,14 @@ mod error_handling_tests {
 
         let output = run_chronos_command(&[
             "import",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "nonexistent_column",
-            "--value-column", "value",
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "nonexistent_column",
+            "--value-column",
+            "value",
+        ])
+        .unwrap();
 
         // Should fail gracefully with meaningful error
         assert!(!output.status.success());
@@ -328,10 +392,14 @@ mod error_handling_tests {
 
         let output = run_chronos_command(&[
             "import",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+        ])
+        .unwrap();
 
         // Should handle gracefully (either skip invalid rows or report error)
         if !output.status.success() {
@@ -352,8 +420,12 @@ mod performance_integration_tests {
         // Create a larger dataset for performance testing
         let mut large_csv = String::from("timestamp,value\n");
         for i in 0..10000 {
-            large_csv.push_str(&format!("2023-01-01T{:02}:{:02}:00Z,{}\n",
-                i % 24, (i % 60), i as f64));
+            large_csv.push_str(&format!(
+                "2023-01-01T{:02}:{:02}:00Z,{}\n",
+                i % 24,
+                (i % 60),
+                i as f64
+            ));
         }
 
         let input_file = create_sample_csv(&large_csv);
@@ -364,17 +436,26 @@ mod performance_integration_tests {
 
         let output = run_chronos_command(&[
             "stats",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         let elapsed = start_time.elapsed();
 
         // Should complete within reasonable time (this is a rough test)
         if output.status.success() {
-            assert!(elapsed.as_secs() < 30, "Analysis took too long: {:?}", elapsed);
+            assert!(
+                elapsed.as_secs() < 30,
+                "Analysis took too long: {:?}",
+                elapsed
+            );
         }
     }
 }
@@ -395,34 +476,50 @@ mod cross_platform_tests {
 
         let output = run_chronos_command(&[
             "import",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-            "--output", output_path.to_str().unwrap(),
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .unwrap();
 
         // Should handle paths correctly on all platforms
         if !output.status.success() {
-            println!("Cross-platform test failed: {}", String::from_utf8_lossy(&output.stderr));
+            println!(
+                "Cross-platform test failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 
     #[test]
     #[serial]
     fn test_unicode_handling() {
-        let unicode_csv = "timestamp,value\n2023-01-01T00:00:00Z,123.45\n2023-01-01T01:00:00Z,678.90\n";
+        let unicode_csv =
+            "timestamp,value\n2023-01-01T00:00:00Z,123.45\n2023-01-01T01:00:00Z,678.90\n";
         let input_file = create_sample_csv(unicode_csv);
 
         let output = run_chronos_command(&[
             "import",
-            "--file", input_file.path().to_str().unwrap(),
-            "--time-column", "timestamp",
-            "--value-column", "value",
-        ]).unwrap();
+            "--file",
+            input_file.path().to_str().unwrap(),
+            "--time-column",
+            "timestamp",
+            "--value-column",
+            "value",
+        ])
+        .unwrap();
 
         // Should handle Unicode correctly
         if !output.status.success() {
-            println!("Unicode test failed: {}", String::from_utf8_lossy(&output.stderr));
+            println!(
+                "Unicode test failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 }

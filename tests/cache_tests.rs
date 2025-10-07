@@ -1,7 +1,7 @@
 //! Unit tests for caching system module
 
-use chronos::performance::cache::*;
 use chronos::config::PerformanceConfig;
+use chronos::performance::cache::*;
 use std::collections::HashMap;
 use tempfile::TempDir;
 
@@ -37,7 +37,9 @@ fn test_cache_set_and_get() {
     let cache = CacheManager::new(&config).expect("Failed to create cache manager");
 
     let test_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    cache.set("test_key", &test_data).expect("Failed to set cache entry");
+    cache
+        .set("test_key", &test_data)
+        .expect("Failed to set cache entry");
 
     let retrieved: Option<Vec<f64>> = cache.get("test_key");
     assert_eq!(retrieved, Some(test_data));
@@ -68,7 +70,9 @@ fn test_cache_remove() {
     let cache = CacheManager::new(&config).expect("Failed to create cache manager");
 
     let test_data = vec![1.0, 2.0, 3.0];
-    cache.set("test_key", &test_data).expect("Failed to set cache entry");
+    cache
+        .set("test_key", &test_data)
+        .expect("Failed to set cache entry");
 
     // Verify it's there
     let retrieved: Option<Vec<f64>> = cache.get("test_key");
@@ -136,7 +140,9 @@ fn test_cache_compression() {
     // Create data large enough to trigger compression
     let large_data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
-    cache.set("large_data", &large_data).expect("Failed to set large data");
+    cache
+        .set("large_data", &large_data)
+        .expect("Failed to set large data");
 
     let retrieved: Option<Vec<f64>> = cache.get("large_data");
     assert_eq!(retrieved, Some(large_data));
@@ -156,7 +162,9 @@ fn test_cache_eviction() {
     // Add entries until eviction happens
     for i in 0..100 {
         let large_data: Vec<f64> = (0..1000).map(|j| (i * 1000 + j) as f64).collect();
-        cache.set(&format!("data_{}", i), &large_data).expect("Failed to set data");
+        cache
+            .set(&format!("data_{}", i), &large_data)
+            .expect("Failed to set data");
     }
 
     let stats = cache.stats();
@@ -171,7 +179,9 @@ fn test_cache_ttl_expiration() {
     let cache = CacheManager::new(&config).expect("Failed to create cache manager");
 
     let test_data = vec![1.0, 2.0, 3.0];
-    cache.set("ttl_test", &test_data).expect("Failed to set cache entry");
+    cache
+        .set("ttl_test", &test_data)
+        .expect("Failed to set cache entry");
 
     // Should be available immediately
     let retrieved: Option<Vec<f64>> = cache.get("ttl_test");
@@ -185,9 +195,8 @@ fn test_cache_ttl_expiration() {
 #[test]
 fn test_analysis_cache() {
     let config = create_test_config();
-    let cache_manager = std::sync::Arc::new(
-        CacheManager::new(&config).expect("Failed to create cache manager")
-    );
+    let cache_manager =
+        std::sync::Arc::new(CacheManager::new(&config).expect("Failed to create cache manager"));
     let analysis_cache = AnalysisCache::new(cache_manager);
 
     // Test statistical analysis caching
@@ -196,7 +205,9 @@ fn test_analysis_cache() {
     stats.insert("std_dev".to_string(), 2.0);
 
     let data_hash = 12345u64;
-    analysis_cache.cache_statistics(data_hash, &stats).expect("Failed to cache statistics");
+    analysis_cache
+        .cache_statistics(data_hash, &stats)
+        .expect("Failed to cache statistics");
 
     let retrieved_stats = analysis_cache.get_statistics(data_hash);
     assert_eq!(retrieved_stats, Some(stats));
@@ -205,9 +216,8 @@ fn test_analysis_cache() {
 #[test]
 fn test_analysis_cache_correlation_matrix() {
     let config = create_test_config();
-    let cache_manager = std::sync::Arc::new(
-        CacheManager::new(&config).expect("Failed to create cache manager")
-    );
+    let cache_manager =
+        std::sync::Arc::new(CacheManager::new(&config).expect("Failed to create cache manager"));
     let analysis_cache = AnalysisCache::new(cache_manager);
 
     let correlation_matrix = vec![
@@ -217,7 +227,8 @@ fn test_analysis_cache_correlation_matrix() {
     ];
 
     let data_hash = 67890u64;
-    analysis_cache.cache_correlation_matrix(data_hash, &correlation_matrix)
+    analysis_cache
+        .cache_correlation_matrix(data_hash, &correlation_matrix)
         .expect("Failed to cache correlation matrix");
 
     let retrieved_matrix = analysis_cache.get_correlation_matrix(data_hash);
@@ -227,16 +238,16 @@ fn test_analysis_cache_correlation_matrix() {
 #[test]
 fn test_analysis_cache_forecast() {
     let config = create_test_config();
-    let cache_manager = std::sync::Arc::new(
-        CacheManager::new(&config).expect("Failed to create cache manager")
-    );
+    let cache_manager =
+        std::sync::Arc::new(CacheManager::new(&config).expect("Failed to create cache manager"));
     let analysis_cache = AnalysisCache::new(cache_manager);
 
     let forecast = vec![10.0, 11.0, 12.0, 13.0, 14.0];
     let model_hash = 54321u64;
     let horizon = 5;
 
-    analysis_cache.cache_forecast(model_hash, horizon, &forecast)
+    analysis_cache
+        .cache_forecast(model_hash, horizon, &forecast)
         .expect("Failed to cache forecast");
 
     let retrieved_forecast = analysis_cache.get_forecast(model_hash, horizon);
@@ -256,7 +267,9 @@ fn test_persistent_cache() {
     let cache = CacheManager::new(&config).expect("Failed to create cache manager");
 
     let test_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    cache.set("persistent_test", &test_data).expect("Failed to set cache entry");
+    cache
+        .set("persistent_test", &test_data)
+        .expect("Failed to set cache entry");
 
     // Create a new cache manager with the same directory
     let cache2 = CacheManager::new(&config).expect("Failed to create second cache manager");
@@ -269,9 +282,8 @@ fn test_persistent_cache() {
 #[test]
 fn test_concurrent_cache_operations() {
     let config = create_test_config();
-    let cache = std::sync::Arc::new(
-        CacheManager::new(&config).expect("Failed to create cache manager")
-    );
+    let cache =
+        std::sync::Arc::new(CacheManager::new(&config).expect("Failed to create cache manager"));
 
     let mut handles = vec![];
 
@@ -315,7 +327,9 @@ fn test_cache_stats_accuracy() {
     assert_eq!(stats.hit_rate, 0.0);
 
     // Add an entry and retrieve it
-    cache.set("stats_test", &vec![1.0, 2.0]).expect("Failed to set entry");
+    cache
+        .set("stats_test", &vec![1.0, 2.0])
+        .expect("Failed to set entry");
     let _: Option<Vec<f64>> = cache.get("stats_test");
 
     // Try to get non-existent entry

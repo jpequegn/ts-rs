@@ -1,9 +1,9 @@
 //! Unit tests for memory management module
 
-use chronos::performance::memory::*;
-use chronos::config::PerformanceConfig;
-use chronos::TimeSeries;
 use chrono::{DateTime, Utc};
+use chronos::config::PerformanceConfig;
+use chronos::performance::memory::*;
+use chronos::TimeSeries;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -46,7 +46,9 @@ fn test_memory_allocation_tracking() {
 
     // Simulate memory allocation
     let test_data = vec![0u8; 1024]; // 1KB
-    manager.track_allocation(test_data.len()).expect("Failed to track allocation");
+    manager
+        .track_allocation(test_data.len())
+        .expect("Failed to track allocation");
 
     let stats = manager.get_memory_stats();
     assert_eq!(stats.allocated_bytes, 1024);
@@ -91,7 +93,9 @@ fn test_streaming_file_processing() {
     // Create a temporary file with test data
     let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
     let test_data = b"1.0,2.0,3.0,4.0,5.0\n6.0,7.0,8.0,9.0,10.0\n";
-    temp_file.write_all(test_data).expect("Failed to write test data");
+    temp_file
+        .write_all(test_data)
+        .expect("Failed to write test data");
 
     let path = temp_file.path();
     let result = processor.process_file(path, |chunk| {
@@ -124,7 +128,8 @@ fn test_lazy_data_loader() {
 #[test]
 fn test_compact_timeseries() {
     let original_ts = create_test_timeseries(1000);
-    let compact = CompactTimeSeries::from_timeseries(&original_ts).expect("Failed to create compact series");
+    let compact =
+        CompactTimeSeries::from_timeseries(&original_ts).expect("Failed to create compact series");
 
     // Test basic properties
     assert_eq!(compact.len(), original_ts.len());
@@ -133,14 +138,17 @@ fn test_compact_timeseries() {
     let first_value = compact.get_value(0).expect("Failed to get first value");
     assert_eq!(first_value, original_ts.values()[0]);
 
-    let last_value = compact.get_value(compact.len() - 1).expect("Failed to get last value");
+    let last_value = compact
+        .get_value(compact.len() - 1)
+        .expect("Failed to get last value");
     assert_eq!(last_value, original_ts.values()[original_ts.len() - 1]);
 }
 
 #[test]
 fn test_compact_timeseries_memory_efficiency() {
     let large_ts = create_test_timeseries(10000);
-    let compact = CompactTimeSeries::from_timeseries(&large_ts).expect("Failed to create compact series");
+    let compact =
+        CompactTimeSeries::from_timeseries(&large_ts).expect("Failed to create compact series");
 
     // Compact series should use less memory than the original
     // This is a simple heuristic test
@@ -191,14 +199,20 @@ fn test_memory_cleanup() {
     let manager = MemoryManager::new(&config).expect("Failed to create memory manager");
 
     // Allocate some memory
-    manager.track_allocation(1024).expect("Failed to track allocation");
-    manager.track_allocation(2048).expect("Failed to track allocation");
+    manager
+        .track_allocation(1024)
+        .expect("Failed to track allocation");
+    manager
+        .track_allocation(2048)
+        .expect("Failed to track allocation");
 
     let stats_before = manager.get_memory_stats();
     assert_eq!(stats_before.allocated_bytes, 3072);
 
     // Perform cleanup
-    manager.cleanup_unused_memory().expect("Failed to cleanup memory");
+    manager
+        .cleanup_unused_memory()
+        .expect("Failed to cleanup memory");
 
     // For this test, cleanup might not change allocated_bytes since we're tracking
     // but it should at least execute without error
@@ -209,7 +223,8 @@ fn test_memory_cleanup() {
 #[test]
 fn test_concurrent_memory_operations() {
     let config = create_test_config();
-    let manager = std::sync::Arc::new(MemoryManager::new(&config).expect("Failed to create memory manager"));
+    let manager =
+        std::sync::Arc::new(MemoryManager::new(&config).expect("Failed to create memory manager"));
 
     let mut handles = vec![];
 
@@ -218,7 +233,8 @@ fn test_concurrent_memory_operations() {
         let mgr = manager.clone();
         let handle = std::thread::spawn(move || {
             let size = (i + 1) * 1024;
-            mgr.track_allocation(size).expect("Failed to track allocation");
+            mgr.track_allocation(size)
+                .expect("Failed to track allocation");
             std::thread::sleep(std::time::Duration::from_millis(10));
             mgr.track_deallocation(size);
         });

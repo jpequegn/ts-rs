@@ -1,9 +1,9 @@
 //! Unit tests for parallel processing module
 
-use chronos::performance::parallel::*;
-use chronos::config::PerformanceConfig;
-use chronos::TimeSeries;
 use chrono::{DateTime, Utc};
+use chronos::config::PerformanceConfig;
+use chronos::performance::parallel::*;
+use chronos::TimeSeries;
 
 fn create_test_config() -> PerformanceConfig {
     PerformanceConfig {
@@ -45,7 +45,9 @@ fn test_parallel_map_operation() {
     let ts = create_test_timeseries(1000);
 
     // Test parallel map: square all values
-    let results = processor.parallel_map(&ts, |x| x * x).expect("Parallel map failed");
+    let results = processor
+        .parallel_map(&ts, |x| x * x)
+        .expect("Parallel map failed");
 
     assert_eq!(results.len(), ts.len());
     for (i, &result) in results.iter().enumerate() {
@@ -62,7 +64,9 @@ fn test_parallel_reduce_operation() {
     let ts = create_test_timeseries(1000);
 
     // Test parallel reduce: sum all values
-    let sum = processor.parallel_reduce(&ts, 0.0, |acc, x| acc + x).expect("Parallel reduce failed");
+    let sum = processor
+        .parallel_reduce(&ts, 0.0, |acc, x| acc + x)
+        .expect("Parallel reduce failed");
 
     let expected_sum: f64 = ts.values().iter().sum();
     assert!((sum - expected_sum).abs() < 1e-10);
@@ -77,9 +81,11 @@ fn test_parallel_windowed_operation() {
     let window_size = 10;
 
     // Test parallel windowed operation: calculate window means
-    let window_means = processor.parallel_windowed(&ts, window_size, |window| {
-        window.iter().sum::<f64>() / window.len() as f64
-    }).expect("Parallel windowed operation failed");
+    let window_means = processor
+        .parallel_windowed(&ts, window_size, |window| {
+            window.iter().sum::<f64>() / window.len() as f64
+        })
+        .expect("Parallel windowed operation failed");
 
     let expected_windows = ts.len() - window_size + 1;
     assert_eq!(window_means.len(), expected_windows);
@@ -114,7 +120,9 @@ fn test_parallel_correlations() {
 
     let series = vec![ts1, ts2, ts3];
 
-    let correlation_matrix = processor.parallel_correlations(&series).expect("Parallel correlations failed");
+    let correlation_matrix = processor
+        .parallel_correlations(&series)
+        .expect("Parallel correlations failed");
 
     assert_eq!(correlation_matrix.len(), 3);
     assert_eq!(correlation_matrix[0].len(), 3);
@@ -138,7 +146,9 @@ fn test_parallel_correlations_empty() {
     let processor = ParallelProcessor::new(&config).expect("Failed to create parallel processor");
 
     let series = vec![];
-    let correlation_matrix = processor.parallel_correlations(&series).expect("Empty correlations should work");
+    let correlation_matrix = processor
+        .parallel_correlations(&series)
+        .expect("Empty correlations should work");
 
     assert_eq!(correlation_matrix.len(), 0);
 }
@@ -152,7 +162,9 @@ fn test_parallel_statistics() {
     let ts2 = create_test_timeseries(200);
 
     let series = vec![ts1, ts2];
-    let stats = processor.parallel_statistics(&series).expect("Parallel statistics failed");
+    let stats = processor
+        .parallel_statistics(&series)
+        .expect("Parallel statistics failed");
 
     assert_eq!(stats.len(), 2);
 
@@ -176,9 +188,9 @@ fn test_process_multiple_generic() {
 
     let input_data = vec![1, 2, 3, 4, 5];
 
-    let results = processor.process_multiple(input_data, |x| {
-        Ok(x * x)
-    }).expect("Process multiple failed");
+    let results = processor
+        .process_multiple(input_data, |x| Ok(x * x))
+        .expect("Process multiple failed");
 
     assert_eq!(results, vec![1, 4, 9, 16, 25]);
 }
@@ -214,10 +226,12 @@ fn test_parallel_forecast() {
     let series = vec![ts1, ts2];
 
     // Simple forecast function: predict next value as mean
-    let forecasts = processor.parallel_forecast(series, |ts| {
-        let mean = ts.values().iter().sum::<f64>() / ts.len() as f64;
-        Ok(vec![mean]) // Forecast one step ahead
-    }).expect("Parallel forecast failed");
+    let forecasts = processor
+        .parallel_forecast(series, |ts| {
+            let mean = ts.values().iter().sum::<f64>() / ts.len() as f64;
+            Ok(vec![mean]) // Forecast one step ahead
+        })
+        .expect("Parallel forecast failed");
 
     assert_eq!(forecasts.len(), 2);
     assert_eq!(forecasts[0].len(), 1);
@@ -228,15 +242,15 @@ fn test_parallel_forecast() {
 fn test_task_processor() {
     let config = create_test_config();
     let parallel_processor = std::sync::Arc::new(
-        ParallelProcessor::new(&config).expect("Failed to create parallel processor")
+        ParallelProcessor::new(&config).expect("Failed to create parallel processor"),
     );
     let task_processor = TaskProcessor::new(parallel_processor);
 
     let tasks = vec![1, 2, 3, 4, 5];
 
-    let results = task_processor.process_batch(tasks, |x| {
-        Ok(x * 2)
-    }).expect("Task batch processing failed");
+    let results = task_processor
+        .process_batch(tasks, |x| Ok(x * 2))
+        .expect("Task batch processing failed");
 
     assert_eq!(results, vec![2, 4, 6, 8, 10]);
 }
@@ -245,18 +259,16 @@ fn test_task_processor() {
 fn test_task_processor_prioritized() {
     let config = create_test_config();
     let parallel_processor = std::sync::Arc::new(
-        ParallelProcessor::new(&config).expect("Failed to create parallel processor")
+        ParallelProcessor::new(&config).expect("Failed to create parallel processor"),
     );
     let task_processor = TaskProcessor::new(parallel_processor);
 
     let high_priority = vec![1, 2];
     let low_priority = vec![3, 4, 5];
 
-    let (high_results, low_results) = task_processor.process_prioritized(
-        high_priority,
-        low_priority,
-        |x| Ok(x * 10)
-    ).expect("Prioritized processing failed");
+    let (high_results, low_results) = task_processor
+        .process_prioritized(high_priority, low_priority, |x| Ok(x * 10))
+        .expect("Prioritized processing failed");
 
     assert_eq!(high_results, vec![10, 20]);
     assert_eq!(low_results, vec![30, 40, 50]);
@@ -292,7 +304,7 @@ fn test_prepare_timeseries() {
 fn test_concurrent_parallel_operations() {
     let config = create_test_config();
     let processor = std::sync::Arc::new(
-        ParallelProcessor::new(&config).expect("Failed to create parallel processor")
+        ParallelProcessor::new(&config).expect("Failed to create parallel processor"),
     );
 
     let mut handles = vec![];
@@ -302,7 +314,9 @@ fn test_concurrent_parallel_operations() {
         let proc = processor.clone();
         let handle = std::thread::spawn(move || {
             let ts = create_test_timeseries(100 + i * 10);
-            let results = proc.parallel_map(&ts, |x| x + i as f64).expect("Parallel map failed");
+            let results = proc
+                .parallel_map(&ts, |x| x + i as f64)
+                .expect("Parallel map failed");
             results.len()
         });
         handles.push(handle);
