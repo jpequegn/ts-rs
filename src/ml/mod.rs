@@ -17,6 +17,7 @@ pub mod automl;
 pub mod interfaces;
 pub mod embeddings;
 pub mod interpretability;
+pub mod online_learning;
 
 // Re-export commonly used types
 pub use types::{
@@ -167,6 +168,35 @@ pub use interpretability::{
     // Core functions
     explain_model_prediction, compute_feature_importance,
     analyze_attention_patterns,
+};
+
+pub use online_learning::{
+    // Core traits
+    OnlineLearningModel, DriftDetector, AdaptiveModel,
+
+    // Configuration types
+    OnlineLearningConfig, DriftDetectionConfig, PerformanceMonitoringConfig,
+    MemoryManagementConfig, LearningRateConfig,
+
+    // Strategy enums
+    AdaptationStrategy, DriftDetectionMethod, StatisticalTest, PerformanceMetric,
+    RetentionStrategy, CompressionMethod, ImportanceScoring, LearningRateSchedule,
+    ModelSelection,
+
+    // Result types
+    UpdateMetrics, DriftDetectionResult, DriftType, DriftStatistics,
+    AdaptationResult, AdaptationState, PerformanceSnapshot, MemoryUpdateResult,
+    TrendDirection, TrendAnalysis,
+
+    // Core implementations
+    OnlineForecaster, OnlinePerformanceMonitor,
+    ADWINDetector, DDMDetector, EDDMDetector,
+
+    // Utility types
+    AlertThresholds,
+
+    // Core functions
+    create_online_forecaster, create_drift_detector, detect_concept_drift,
 };
 
 /// Result type for ML operations
